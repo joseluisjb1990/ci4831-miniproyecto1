@@ -7,7 +7,17 @@
 
 #define RCVBUFSIZE 32   /* Size of receive buffer */
 
+#define MES_SIZE 2048
 void DieWithError(char *errorMessage);  /* Error handling function */
+
+void build_message(int encrypt, char* mes, char* ret_buffer)
+{
+
+  if (encrypt) strcpy(ret_buffer, "CIF\n");
+  else strcpy(ret_buffer, "DES\n");
+
+  strcat(ret_buffer, mes);
+}
 
 int main(int argc, char *argv[])
 {
@@ -50,10 +60,15 @@ int main(int argc, char *argv[])
     if (connect(sock, (struct sockaddr *) &echoServAddr, sizeof(echoServAddr)) < 0)
         DieWithError("connect() failed");
 
-    echoStringLen = strlen(echoString);          /* Determine input length */
+    // EN LA VARIABLE ECHOSTRING DEBERIA TENER EL MENSAJE A CIFRAR
+    char out_buffer[MES_SIZE]; 
+    build_message(1, echoString, out_buffer);
+    echoStringLen = strlen(out_buffer);          /* Determine input length */
+
+    printf("%s\n", out_buffer);
 
     /* Send the string to the server */
-    if (send(sock, echoString, echoStringLen, 0) != echoStringLen)
+    if (send(sock, out_buffer, echoStringLen, 0) != echoStringLen)
         DieWithError("send() sent a different number of bytes than expected");
 
     /* Receive the same string back from the server */
