@@ -5,19 +5,33 @@
 #include <string.h>     /* for memset() */
 #include <unistd.h>     /* for close() */
 #include <getopt.h>
+#include <time.h>
 
 #define RCVBUFSIZE 128   /* Size of receive buffer */
 
 #define MES_SIZE 2048
 void DieWithError(char *errorMessage);  /* Error handling function */
 
-void build_message(int encrypt, char* mes, char* ret_buffer)
+void build_message(int encrypt, char* key, char* address, char* mes, char* ret_buffer)
 {
+    time_t tiempo = time(0);
+    struct tm *tlocal = localtime(&tiempo);
+    char output[128];
+    strftime(output,128,"%d/%m/%Y %H:%M:%S",tlocal);
 
-  if (encrypt) strcpy(ret_buffer, "CIF\n");
-  else strcpy(ret_buffer, "DES\n");
+    if (encrypt) strcpy(ret_buffer, "CIF\n");
+    else strcpy(ret_buffer, "DES\n");
 
-  strcat(ret_buffer, mes);
+    strcat(ret_buffer, "key: ");
+    strcat(ret_buffer, key); //ARREGLAR ESTO
+    strcat(ret_buffer, "\n");
+    strcat(ret_buffer, "address: ");
+    strcat(ret_buffer, address);
+    strcat(ret_buffer, "\n");
+    strcat(ret_buffer, "time: ");
+    strcat(ret_buffer, output);
+    strcat(ret_buffer, "\n");
+    strcat(ret_buffer, mes);
 }
 
 void read_file_process(char* buffer, char* file)
@@ -48,7 +62,7 @@ int main(int argc, char *argv[])
                                         and total bytes read */
 
     /* Otras variables para el cifrado */
-    int longClave;
+    char *longClave;
     char *dirCifrado;
     char *nombreArchivoProcesar;
 
@@ -72,9 +86,11 @@ int main(int argc, char *argv[])
                 servIP = optarg;
                 break;
             case 'c':
-                if (!(longClave = atoi(optarg)))
+                longClave = optarg;
+                int key;
+                if (!(key=atoi(longClave)))
                     DieWithError("ERROR: EL VALOR SEGUIDO DE [-c] DEBE SER UN NUMERO ENTERO");
-                if ( (longClave < 1) || (longClave > 27) )
+                if ( (key < 1) || (key > 27) )
                     DieWithError("ERROR: EL VALOR SEGUIDO DE [-c] DEBE ESTAR COMPRENDIDO ENTRE 1 Y 27");
                 break;
             case 'a':
@@ -99,6 +115,7 @@ int main(int argc, char *argv[])
         }
     }
 
+
     read_file_process(echoString, nombreArchivoProcesar);
 
     printf("%d\n", echoServPort);
@@ -119,7 +136,9 @@ int main(int argc, char *argv[])
 
     // EN LA VARIABLE ECHOSTRING DEBERIA TENER EL MENSAJE A CIFRAR
     char out_buffer[MES_SIZE]; 
-    build_message(1, echoString, out_buffer);
+    // SI DEJO EL ECHOSTRING DA VIOLACION DE SEGMENTO ASI QUE MODIFICAR ESTO
+    //build_message(1, longClave, dirCifrado, echoString, out_buffer);
+    build_message(1, longClave, dirCifrado, "AQUI VA EL MENSAJE", out_buffer);
     echoStringLen = strlen(out_buffer);          /* Determine input length */
 
     printf("%s\n", out_buffer);
@@ -147,3 +166,4 @@ int main(int argc, char *argv[])
     close(sock);
     exit(0);
 }
+
