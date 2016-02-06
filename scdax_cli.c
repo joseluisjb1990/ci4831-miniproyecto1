@@ -4,6 +4,7 @@
 #include <stdlib.h>     /* for atoi() and exit() */
 #include <string.h>     /* for memset() */
 #include <unistd.h>     /* for close() */
+#include <getopt.h>
 
 #define RCVBUFSIZE 32   /* Size of receive buffer */
 
@@ -31,14 +32,78 @@ int main(int argc, char *argv[])
     int bytesRcvd, totalBytesRcvd;   /* Bytes read in single recv() 
                                         and total bytes read */
 
-    if ((argc < 3) || (argc > 4))    /* Test for correct number of arguments */
+    /* Otras variables para el cifrado */
+    int longClave;
+    char *dirCifrado;
+    char *nombreArchivoProcesar;
+
+
+    /* Puerto por defecto */
+    echoServPort = 20849;
+
+    /* Verificamos argumentos */
+    if (argc < 9 || argc > 11)
+        DieWithError("ERROR: Cantidad de argumentos invalidos.\n"
+        "   Introduzca: scdax_cli -i <dir_ip> [-p <puerto_scdax_svr>] -c <long_clave> -a <dir_cif> -f <archivo_a_procesar> ");
+
+
+    int option = 0;
+    while((option = getopt(argc, argv,"i:c:a:f:p")) != -1) 
     {
-       fprintf(stderr, "Usage: %s <Server IP> <Echo Word> [<Echo Port>]\n",
-               argv[0]);
-       exit(1);
+        switch (option)
+        {
+            case 'i':
+                servIP = optarg;
+                break;
+            case 'c':
+                if (!(longClave = atoi(optarg)))
+                    DieWithError("ERROR: EL VALOR SEGUIDO DE [-c] DEBE SER UN NUMERO ENTERO");
+                if ( (longClave < 1) || (longClave > 27) )
+                    DieWithError("ERROR: EL VALOR SEGUIDO DE [-c] DEBE ESTAR COMPRENDIDO ENTRE 1 Y 27");
+                break;
+            case 'a':
+                dirCifrado = optarg;     
+                if ( (strcmp("derecha",dirCifrado)!=0) || !(strcmp("izquierda",dirCifrado)!=0) )
+                    DieWithError("ERROR: EL VALOR SEGUIDO DE [-a] DEBE TOMAR LOS VALORES \"izquierda\" O \"derecha\"");
+                break;
+            case 'f':
+                nombreArchivoProcesar = optarg;
+                break;
+            case 'p':
+                if (!(echoServPort = atoi(optarg)))
+                    DieWithError("ERROR: EL VALOR SEGUIDO DE [-p] DEBE SER UN NUMERO DE PUERTO");
+                break;
+            case '?':
+                DieWithError("ERROR: Argumentos invalidos.\n"
+                "   Introduzca: scdax_cli -i <dir_ip> [-p <puerto_scdax_svr>] -c <long_clave> -a <dir_cif> -f <archivo_a_procesar> ");
+                break;
+        }
     }
 
-    servIP = argv[1];             /* First arg: server IP address (dotted quad) */
+
+
+    
+    /*for (int i = 0; i < argc; i++){
+        
+        if (strcmp("-i",argv[i])==0){
+            servIP = argv[i+];
+        } else if (strcmp("-c",argv[i])==0){
+            
+            if (!(longClave = atoi(argv[i+1])))
+                DieWithError("ERROR: EL VALOR SEGUIDO DE [-c] DEBE SER UN NUMERO ENTERO");
+
+            if (longClave <1 || longClave > 27)
+                DieWithError("ERROR: EL VALOR SEGUIDO DE [-c] DEBE ESTAR COMPRENDIDO ENTRE 1 Y 27");
+        }else if (strcmp("-a",argv[i])==0){
+
+            if ( (strcmp("derecha")!=0) || (strcmp("izquierda")!=0) )
+                DieWithError("ERROR: EL VALOR SEGUIDO DE [-a] DEBE TOMAR LOS VALORES \"izquierda\" O \"derecha\"");
+        }
+
+    }*/
+    
+
+    
     echoString = argv[2];         /* Second arg: string to echo */
 
     if (argc == 4)
