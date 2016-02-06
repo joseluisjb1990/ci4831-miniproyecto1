@@ -6,7 +6,7 @@
 #include <unistd.h>     /* for close() */
 #include <getopt.h>
 
-#define RCVBUFSIZE 32   /* Size of receive buffer */
+#define RCVBUFSIZE 128   /* Size of receive buffer */
 
 #define MES_SIZE 2048
 void DieWithError(char *errorMessage);  /* Error handling function */
@@ -20,13 +20,28 @@ void build_message(int encrypt, char* mes, char* ret_buffer)
   strcat(ret_buffer, mes);
 }
 
+void read_file_process(char* buffer, char* file)
+{
+  FILE *fp = fopen(file, "r");
+  char c;
+  int i;
+
+  if(fp == NULL) DieWithError("OCURRIO UN ERROR ABRIENDO EL ARCHIVO");
+
+  i = 0;
+  while((c = getc(fp)) != EOF)
+    buffer[i++] = c;
+
+  fclose(fp);
+}
+
 int main(int argc, char *argv[])
 {
     int sock;                        /* Socket descriptor */
     struct sockaddr_in echoServAddr; /* Echo server address */
     unsigned short echoServPort;     /* Echo server port */
     char *servIP;                    /* Server IP address (dotted quad) */
-    char *echoString;                /* String to send to echo server */
+    char echoString[RCVBUFSIZE];    /* String to send to echo server */
     char echoBuffer[RCVBUFSIZE];     /* Buffer for echo string */
     unsigned int echoStringLen;      /* Length of string to echo */
     int bytesRcvd, totalBytesRcvd;   /* Bytes read in single recv() 
@@ -80,36 +95,7 @@ int main(int argc, char *argv[])
         }
     }
 
-
-
-    
-    /*for (int i = 0; i < argc; i++){
-        
-        if (strcmp("-i",argv[i])==0){
-            servIP = argv[i+];
-        } else if (strcmp("-c",argv[i])==0){
-            
-            if (!(longClave = atoi(argv[i+1])))
-                DieWithError("ERROR: EL VALOR SEGUIDO DE [-c] DEBE SER UN NUMERO ENTERO");
-
-            if (longClave <1 || longClave > 27)
-                DieWithError("ERROR: EL VALOR SEGUIDO DE [-c] DEBE ESTAR COMPRENDIDO ENTRE 1 Y 27");
-        }else if (strcmp("-a",argv[i])==0){
-
-            if ( (strcmp("derecha")!=0) || (strcmp("izquierda")!=0) )
-                DieWithError("ERROR: EL VALOR SEGUIDO DE [-a] DEBE TOMAR LOS VALORES \"izquierda\" O \"derecha\"");
-        }
-
-    }*/
-    
-
-    
-    echoString = argv[2];         /* Second arg: string to echo */
-
-    if (argc == 4)
-        echoServPort = atoi(argv[3]); /* Use given port, if any */
-    else
-        echoServPort = 7;  /* 7 is the well-known port for the echo service */
+    read_file_process(echoString, nombreArchivoProcesar);
 
     /* Create a reliable, stream socket using TCP */
     if ((sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
