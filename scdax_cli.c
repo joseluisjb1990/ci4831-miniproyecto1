@@ -7,7 +7,7 @@
 #include <getopt.h>
 #include <time.h>
 
-#define RCVBUFSIZE 32   /* Size of receive buffer */
+#define RCVBUFSIZE 128   /* Size of receive buffer */
 
 #define MES_SIZE 2048
 void DieWithError(char *errorMessage);  /* Error handling function */
@@ -34,13 +34,28 @@ void build_message(int encrypt, char* key, char* address, char* mes, char* ret_b
     strcat(ret_buffer, mes);
 }
 
+void read_file_process(char* buffer, char* file)
+{
+  FILE *fp = fopen(file, "r");
+  char c;
+  int i;
+
+  if(fp == NULL) DieWithError("OCURRIO UN ERROR ABRIENDO EL ARCHIVO");
+
+  i = 0;
+  while((c = getc(fp)) != EOF)
+    buffer[i++] = c;
+
+  fclose(fp);
+}
+
 int main(int argc, char *argv[])
 {
     int sock;                        /* Socket descriptor */
     struct sockaddr_in echoServAddr; /* Echo server address */
     unsigned short echoServPort;     /* Echo server port */
     char *servIP;                    /* Server IP address (dotted quad) */
-    char *echoString;                /* String to send to echo server */
+    char echoString[RCVBUFSIZE];    /* String to send to echo server */
     char echoBuffer[RCVBUFSIZE];     /* Buffer for echo string */
     unsigned int echoStringLen;      /* Length of string to echo */
     int bytesRcvd, totalBytesRcvd;   /* Bytes read in single recv() 
@@ -97,6 +112,7 @@ int main(int argc, char *argv[])
     }
 
 
+    read_file_process(echoString, nombreArchivoProcesar);
 
     /* Create a reliable, stream socket using TCP */
     if ((sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
