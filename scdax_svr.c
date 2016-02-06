@@ -19,8 +19,6 @@ int main(int argc, char *argv[])
     struct sockaddr_in echoClntAddr; /* Client address */
     unsigned short echoServPort;     /* Server port */
     unsigned int clntLen;            /* Length of client address data structure */
-
-
     char *archivoBitacora;
 
     /* Puerto por defecto */
@@ -30,8 +28,6 @@ int main(int argc, char *argv[])
     if (argc < 3 || argc > 5)
         DieWithError("ERROR: Cantidad de argumentos invalidos.\n"
         "   Introduzca: scdax_svr [-l <puerto_scdax_svr>] -b <archivo_bitacora>");
-
-    echoServPort = 20849;
 
     int option = 0;
     /* Caso en que la cantidad de argumentos es de 9 */
@@ -57,17 +53,11 @@ int main(int argc, char *argv[])
 
 
     /* Create socket for incoming connections */
-    if ((servSock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
+    if ((servSock = tcp_socket()) < 0)
         DieWithError("socket() failed");
-      
-    /* Construct local address structure */
-    memset(&echoServAddr, 0, sizeof(echoServAddr));   /* Zero out structure */
-    echoServAddr.sin_family = AF_INET;                /* Internet address family */
-    echoServAddr.sin_addr.s_addr = htonl(INADDR_ANY); /* Any incoming interface */
-    echoServAddr.sin_port = htons(echoServPort);      /* Local port */
 
     /* Bind to the local address */
-    if (bind(servSock, (struct sockaddr *) &echoServAddr, sizeof(echoServAddr)) < 0)
+    if ((tcp_bind(echoServPort, servSock)) < 0)
         DieWithError("bind() failed");
 
     /* Mark the socket so it will listen for incoming connections */

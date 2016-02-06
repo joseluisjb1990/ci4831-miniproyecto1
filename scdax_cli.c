@@ -62,6 +62,7 @@ int main(int argc, char *argv[])
         "   Introduzca: scdax_cli -i <dir_ip> [-p <puerto_scdax_svr>] -c <long_clave> -a <dir_cif> -f <archivo_a_procesar> ");
 
 
+    printf("%d\n", echoServPort);
     int option = 0;
     while((option = getopt(argc, argv,"i:c:a:f:p")) != -1) 
     {
@@ -86,8 +87,11 @@ int main(int argc, char *argv[])
                 break;
             case 'p':
                 if (!(echoServPort = atoi(optarg)))
-                    DieWithError("ERROR: EL VALOR SEGUIDO DE [-p] DEBE SER UN NUMERO DE PUERTO");
-                break;
+                {    
+                  printf("%d\n", echoServPort);
+                  DieWithError("ERROR: EL VALOR SEGUIDO DE [-p] DEBE SER UN NUMERO DE PUERTO");
+                  break;
+                }
             case '?':
                 DieWithError("ERROR: Argumentos invalidos.\n"
                 "   Introduzca: scdax_cli -i <dir_ip> [-p <puerto_scdax_svr>] -c <long_clave> -a <dir_cif> -f <archivo_a_procesar> ");
@@ -96,6 +100,8 @@ int main(int argc, char *argv[])
     }
 
     read_file_process(echoString, nombreArchivoProcesar);
+
+    printf("%d\n", echoServPort);
 
     /* Create a reliable, stream socket using TCP */
     if ((sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
