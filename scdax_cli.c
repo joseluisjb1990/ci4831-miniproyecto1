@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
 
 
     int option = 0;
-    while((option = getopt(argc, argv,"i:c:a:f:p")) != -1) 
+    while((option = getopt(argc, argv,"i:c:a:f:p:")) != -1) 
     {
         switch (option)
         {
