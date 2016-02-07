@@ -4,6 +4,7 @@
 #include <unistd.h>     /* for close() */
 #include <ctype.h>
 #include <string.h>
+#include <ctype.h>
 
 #define RCVBUFSIZE 32   /* Size of receive buffer */
 #define OUTBUFSIZE 160
@@ -24,7 +25,8 @@ char encryipt_char(char c, int shift)
     }
   }
 
-  if(' ' == c) return ' ';
+  if(' '  == c) return ' ';
+  if('\n' == c) return '\n';
 
   return -1;
 }
@@ -41,7 +43,7 @@ char decrypt_char(char c, int shift)
     }
   }
 
-  if(' ' == c) return ' ';
+  if(isspace(c)) return c;
 
   return -1;
 }
@@ -86,6 +88,7 @@ char decrypt_bacon_transform(char* s)
   if (strcmp("BAAABB", s) == 0) return '9';
   if (strcmp("BAABAA", s) == 0) return '.';
   if (strcmp("BAABAB", s) == 0) return ' ';
+  if (strcmp("BAABBA", s) == 0) return '\n';
   return -1;
 }
 char* bacon_transform(char c)
@@ -130,6 +133,7 @@ char* bacon_transform(char c)
     case '9': return "BAAABB";
     case '.': return "BAABAA";
     case ' ': return "BAABAB";
+    case '\n': return "BAABBA";
     default: return "BBBBBB";
   }
 }
