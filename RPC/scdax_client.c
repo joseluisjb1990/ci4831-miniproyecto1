@@ -33,10 +33,10 @@ void build_message(int encrypt, char* key, char* address, char* mes, char* ret_b
     strcpy(ret_buffer, "CIF\n");
     printf("%s\n", ret_buffer);
     strcat(ret_buffer, "key: ");
-    strcat(ret_buffer, key); //ARREGLAR ESTO
+    strcat(ret_buffer, key);
     strcat(ret_buffer, "\n");
     strcat(ret_buffer, "address: ");
-    strcat(ret_buffer, address);
+    if(strcmp(address, "izquierda")) strcat(ret_buffer, "i"); else strcat(ret_buffer, "d");
     strcat(ret_buffer, "\n");
     strcat(ret_buffer, "time: ");
     strcat(ret_buffer, output);
@@ -44,14 +44,52 @@ void build_message(int encrypt, char* key, char* address, char* mes, char* ret_b
     strcat(ret_buffer, mes);
 }
 
+
+void write_file_process(char* buffer, char* file)
+{
+  FILE *fp = fopen(file, "w");
+  if(fp == NULL) DieWithError("OCURRIO UN ERROR ABRIENDO EL ARCHIVO");
+  fputs(buffer, fp);
+  fclose(fp);
+}
+
+void parse_response(char* response, char* fileProcess)
+{
+  char temp[10];
+  char* auxToken = strtok(response, "\n"); 
+  int code = strtol(auxToken, NULL, 10);
+  auxToken = strtok(NULL, "\n"); //Parseamos la linea de la hora y el dia y la descartamos.
+  auxToken = strtok(NULL, "\n"); //En auxToken queda el mensaje encriptado
+  write_file_process(auxToken, fileProcess);
+}
+
+
+
+void read_file_process(char* buffer, char* file)
+{
+  FILE *fp = fopen(file, "r");
+  char c;
+  int i;
+
+  if(fp == NULL) DieWithError("OCURRIO UN ERROR ABRIENDO EL ARCHIVO");
+
+  i = 0;
+  while((c = getc(fp)) != EOF)
+    buffer[i++] = c;
+
+  buffer[i] = '\0';
+  fclose(fp);
+}
+
 void
-scdax_prog_1(char *host, char* longClave, char* dirCifrado)
+scdax_prog_1(char *host, char* longClave, char* dirCifrado, char* nombreArchivoProcesar)
 {
 	CLIENT *clnt;
 	int  *result_1;
 	message  encrypt_msg_1_arg;
 	int  *result_2;
 	message  decrypt_msg_1_arg;
+	char echoString[MSGSIZE]; 
 
 #ifndef	DEBUG
 	clnt = clnt_create (host, SCDAX_PROG, SCDAX_VERS, "tcp");
@@ -61,11 +99,21 @@ scdax_prog_1(char *host, char* longClave, char* dirCifrado)
 	}
 #endif	/* DEBUG */
 
-	encrypt_msg_1_arg.msg = malloc(MSGSIZE * sizeof(char));
+	/*encrypt_msg_1_arg.msg = malloc(MSGSIZE * sizeof(char));
 	encrypt_msg_1_arg.msg_size = 4;
-	encrypt_msg_1_arg.out_msg = malloc(MSGSIZE * sizeof(char));
-	//encrypt_msg_1_arg.out_msg = "HEYYY\n";
-	//encrypt_msg_1_arg.out_msg = concat(encrypt_msg_1_arg.out_msg, "Agregar");
+	encrypt_msg_1_arg.out_msg = malloc(MSGSIZE * sizeof(char));*/
+
+	read_file_process(echoString, nombreArchivoProcesar);
+	encrypt_msg_1_arg.msg = malloc(MSGSIZE * sizeof(char));
+	encrypt_msg_1_arg.msg = echoString;
+	encrypt_msg_1_arg.msg_size = MSGSIZE; //ESTO CAMBIAAR
+	encrypt_msg_1_arg.out_msg = malloc(MSGSIZE * sizeof(char));	
+
+	/* Verificacion de si es msj cifrado o no */
+	int mode;
+    if(isalpha(echoString[0]) || isdigit(echoString[0])) mode = 1;
+    else mode = 0;
+
 	build_message(1, longClave, dirCifrado, encrypt_msg_1_arg.msg, encrypt_msg_1_arg.out_msg);
 	printf("Hola\n");
 	result_1 = encrypt_msg_1(&encrypt_msg_1_arg, clnt);
@@ -127,6 +175,6 @@ main (int argc, char *argv[])
         }
     }
 
-	scdax_prog_1(host, longClave, dirCifrado);
+	scdax_prog_1(host, longClave, dirCifrado, nombreArchivoProcesar);
 	exit (0);
 }
