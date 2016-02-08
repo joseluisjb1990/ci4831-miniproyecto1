@@ -64,6 +64,8 @@ int main(int argc, char *argv[])
     if (listen(servSock, MAXPENDING) < 0)
         DieWithError("listen() failed");
 
+    srand(time(NULL));
+
     int id = 33 + rand() % 30;
     for (;;) /* Run forever */
     {
