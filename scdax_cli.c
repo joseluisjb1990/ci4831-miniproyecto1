@@ -28,7 +28,7 @@ void build_message(int encrypt, char* key, char* address, char* mes, char* ret_b
     strcat(ret_buffer, key); //ARREGLAR ESTO
     strcat(ret_buffer, "\n");
     strcat(ret_buffer, "address: ");
-    if(strcmp(address, "izquierda")) strcat(ret_buffer, "i"); else strcat(ret_buffer, "d");
+    if(strcmp(address, "izquierda") == 0) strcat(ret_buffer, "i"); else strcat(ret_buffer, "d");
     strcat(ret_buffer, "\n");
     strcat(ret_buffer, "time: ");
     strcat(ret_buffer, output);
@@ -41,9 +41,34 @@ void parse_response(char* response, char* fileProcess)
   char temp[10];
   char* auxToken = strtok(response, "\n"); 
   int code = strtol(auxToken, NULL, 10);
-  auxToken = strtok(NULL, "\n"); //Parseamos la linea de la hora y el dia y la descartamos.
-  auxToken = strtok(NULL, "\n"); //En auxToken queda el mensaje encriptado
-  write_file_process(auxToken, fileProcess);
+
+  switch(code) {
+    case 100:
+      auxToken = strtok(NULL, "\n"); //Parseamos la linea de la hora y el dia y la descartamos.
+      auxToken = strtok(NULL, "\0"); //En auxToken queda el mensaje encriptado
+      write_file_process(auxToken, fileProcess);
+      break;
+    case 200:
+      printf("ERROR %d: %s\n", code, "El mensaje enviado por el cliente no sigue las reglas definidas por el protocolo");
+      break;
+    case 300:
+      printf("ERROR %d: %s\n", code, "El mensaje no pudo ser cifrado correctamente");
+      break;
+    case 301:
+      printf("ERROR %d: %s\n", code, "El mensaje no pudo ser descifrado correctamente");
+      break;
+    case 302:
+      printf("ERROR %d: %s\n", code, "El mensaje no pudo ser descifrado correctamente");
+      break;
+    case 400:
+      printf("ERROR %d: %s\n", code, "El mensaje que se intentó descifrar no fue cifrado por el servidor al que se consultó");
+      break;
+    case 900:
+      printf("ERROR %d: %s\n", code, "Ocurrió un error grave en el servidor");
+      break;
+    default:
+      printf("%d\n", code);
+  }
 }
 
 void write_file_process(char* buffer, char* file)
@@ -152,7 +177,7 @@ int main(int argc, char *argv[])
     // EN LA VARIABLE ECHOSTRING DEBERIA TENER EL MENSAJE A CIFRAR
 
     int mode;
-    if(isalpha(echoString[0]) || isdigit(echoString[0])) mode = 1;
+    if(isalpha(echoString[0])) mode = 1;
     else mode = 0;
 
     build_message(mode, longClave, dirCifrado, echoString, out_buffer);

@@ -154,6 +154,7 @@ char random_char(char c)
 int encrypt_msg(char* msg, int msg_size, char* outBuffer, int offset)
 {
 
+  printf("%s\n", msg);
   for(int i = 0; i < msg_size; i++)
     msg[i] = tolower(msg[i]);
 
@@ -190,7 +191,7 @@ char decrypt_random_char(char c)
 
 int decrypt_msg(char* msg, int msg_size, char* decryptBuffer, int offset)
 {
-  if(SERVERID == msg[0]) msg++;
+  if(SERVERID == msg[0]) { msg++; msg_size--; }
   else return -2;
 
   if(msg_size % BACONSIZE != 0) return -1; //SI ESTO PASA HAY QUE RETORNAR UN CODIGO DE ERROR
@@ -208,11 +209,11 @@ int decrypt_msg(char* msg, int msg_size, char* decryptBuffer, int offset)
 
     temp[BACONSIZE] = '\0';
 
-    decryptBuffer[pos++] = decrypt_bacon_transform(temp);   
+    if((decryptBuffer[pos++] = decrypt_bacon_transform(temp)) == -1) return -1;   
   }
 
   for(int i = 0; i < pos; i++)
-    decryptBuffer[i] = decrypt_char(decryptBuffer[i], offset);
+    if((decryptBuffer[i] = decrypt_char(decryptBuffer[i], offset)) == -1) return -1;
 
   decryptBuffer[pos] = '\0';
   return pos;
@@ -265,7 +266,7 @@ header* parse_request(char* request)
     return head;
   }
  
-  auxToken = strtok(NULL, "\n"); //Obtenemos el mensaje a descifrar.
+  auxToken = strtok(NULL, "\0"); //Obtenemos el mensaje a descifrar.
   head->message = auxToken;
   return head;
 }
@@ -303,12 +304,15 @@ int process_request(char* request, char* outBuffer)
     else
       code = 100;
   else if (head->mode == 0) 
-    if ((decrypt_msg(head->message, (int) strlen(head->message), auxBuffer, head->cant)) == -1)
-      code = 300;
-    else
-      code = 100;
+  {
+    int res = decrypt_msg(head->message, (int) strlen(head->message), auxBuffer, head->cant);
+    if(res == -1) code = 301;
+    else if (res == -2) code = 400;
+    else code = 100;
+  }
   else { auxBuffer = ""; code = 900; }
 
+  printf("%s\n", auxBuffer);
   return create_response(code, auxBuffer, outBuffer);
 }
 
