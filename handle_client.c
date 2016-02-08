@@ -5,17 +5,27 @@
 #include <ctype.h>
 #include <string.h>
 #include <ctype.h>
+#include <time.h>
 
 #define RCVBUFSIZE 32   /* Size of receive buffer */
-#define OUTBUFSIZE 160
+#define OUTBUFSIZE 2048
 #define LETTERSIZE 26
 #define BACONSIZE 6
+
+typedef struct {
+  int mode;
+  int cant;
+  char* message;
+} header;
+
 char* letters = "abcdefghijklmnopqrstuvwxyz";
+char SERVERID;
 
 void DieWithError(char *errorMessage);  /* Error handling function */
 
 char encryipt_char(char c, int shift)
 {
+  if(isspace(c)) return c;
   for(int i = 0; i < LETTERSIZE; i++)
   {
     if(letters[i] == c) 
@@ -24,16 +34,13 @@ char encryipt_char(char c, int shift)
       return letters[pos];
     }
   }
-
-  if(' '  == c) return ' ';
-  if('\n' == c) return '\n';
-
   return -1;
 }
 
 
 char decrypt_char(char c, int shift)
 {
+  if(isspace(c)) return c;
   for(int i = 0; i < LETTERSIZE; i++)
   {
     if(letters[i] == c) 
@@ -42,9 +49,6 @@ char decrypt_char(char c, int shift)
       return letters[pos];
     }
   }
-
-  if(isspace(c)) return c;
-
   return -1;
 }
 
@@ -134,7 +138,7 @@ char* bacon_transform(char c)
     case '.': return "BAABAA";
     case ' ': return "BAABAB";
     case '\n': return "BAABBA";
-    default: return "BBBBBB";
+    default: return NULL;
   }
 }
 
@@ -147,28 +151,32 @@ char random_char(char c)
   else return -1;
 }
 
-int encrypt_msg(char* msg, int msg_size, char* outBuffer)
+int encrypt_msg(char* msg, int msg_size, char* outBuffer, int offset)
 {
+
   for(int i = 0; i < msg_size; i++)
     msg[i] = tolower(msg[i]);
 
   for(int i = 0; i < msg_size; i++)
-    msg[i] = encryipt_char(msg[i], -5);
-
+    if ((msg[i] = encryipt_char(msg[i], offset)) == -1)
+      return -1;
+    
 
   int pos = 0;
+  outBuffer[pos++] = SERVERID;
   for(int i = 0; i < msg_size; i++)
   {
-    char* tchar = bacon_transform(msg[i]);
+    char* tchar; 
+    if((tchar = bacon_transform(msg[i])) == NULL) return -1;
     for(int j = 0; j < BACONSIZE; j++)
       outBuffer[pos++] = tchar[j];  
   }
 
-  for (int i = 0; i < pos; i++)
-  {
-    outBuffer[i] = random_char(outBuffer[i]);
-  }
+  for (int i = 1; i < pos; i++)
+    if((outBuffer[i] = random_char(outBuffer[i])) == -1)
+      return -1;
   
+  outBuffer[pos] = '\0';
   return pos;
 }
 
@@ -180,14 +188,15 @@ char decrypt_random_char(char c)
   return -1;
 }
 
-int decrypt_msg(char* msg, int msg_size, char* decryptBuffer)
+int decrypt_msg(char* msg, int msg_size, char* decryptBuffer, int offset)
 {
+  if(SERVERID == msg[0]) msg++;
+  else return -2;
+
   if(msg_size % BACONSIZE != 0) return -1; //SI ESTO PASA HAY QUE RETORNAR UN CODIGO DE ERROR
   
   for(int i = 0; i < msg_size; i++)
-  {
-    msg[i] = decrypt_random_char(msg[i]); 
-  }
+    if((msg[i] = decrypt_random_char(msg[i])) == -1) return -1;
 
   int pos = 0;
   
@@ -203,35 +212,125 @@ int decrypt_msg(char* msg, int msg_size, char* decryptBuffer)
   }
 
   for(int i = 0; i < pos; i++)
-    decryptBuffer[i] = decrypt_char(decryptBuffer[i], -5);
+    decryptBuffer[i] = decrypt_char(decryptBuffer[i], offset);
 
+  decryptBuffer[pos] = '\0';
   return pos;
 }
 
-void HandleTCPClient(int clntSocket)
+void split(char* temp, char* original, int tam)
 {
-    char echoBuffer[RCVBUFSIZE];        /* Buffer for echo string */
-    char decryptBuffer[RCVBUFSIZE];        /* Buffer for echo string */
-    char outBuffer[OUTBUFSIZE];
+  strncpy(temp, &(original[tam]), strlen(original) - tam);
+}
+
+header* parse_request(char* request)
+{
+  header* head = (header*) malloc(sizeof(header));
+
+  //Variables para guardar los resultados temporales del parseo
+  char temp[10];
+  char* auxToken = strtok(request, "\n"); 
+
+  if(strcmp(auxToken, "CIF") == 0) head->mode = 1;
+  else if (strcmp(auxToken, "DES") == 0) head->mode = 0;
+  else { head->mode = -1; return head; }
+
+  auxToken = strtok(NULL, "\n");
+  
+  if (strstr(auxToken, "key: ") != NULL) 
+  {
+    split(temp, auxToken, 5); //Descartamos la palabra "key: ".
+    head->cant = strtol(temp, NULL, 10);
+  } else
+  {
+    head->mode = -1;
+    return head;
+  }
+
+  auxToken = strtok(NULL, "\n");
+  if(strstr(auxToken, "address: ") != NULL)
+  {
+    split(temp, auxToken, 9); //Descartamos la palabra "address: ";
+    if(strcmp(temp, "i") == 0) head->cant = -1 * head->cant;
+  } else
+  {
+    head->mode = -1;
+    return head;
+  }
+  
+  auxToken = strtok(NULL, "\n"); //Parseamos la linea de la hora y el dia y la descartamos.
+  if(strstr(auxToken, "time: ") == NULL)
+  {
+    head->mode = -1;
+    return head;
+  }
+ 
+  auxToken = strtok(NULL, "\n"); //Obtenemos el mensaje a descifrar.
+  head->message = auxToken;
+  return head;
+}
+
+int create_response(int code, char* buffer, char* outBuffer)
+{
+  time_t tiempo = time(0);
+  struct tm *tlocal = localtime(&tiempo);
+  char bufferTime[128];
+  strftime(bufferTime,128,"%d/%m/%Y %H:%M:%S",tlocal);
+
+  char bufferCode[4];
+  sprintf(bufferCode, "%d", code);
+  bufferCode[3] = '\0';
+
+  strcpy(outBuffer, bufferCode);
+  strcat(outBuffer, "\n");
+  strcat(outBuffer, "time: ");
+  strcat(outBuffer, bufferTime);
+  strcat(outBuffer, "\n");
+  strcat(outBuffer, buffer);
+  return strlen(outBuffer);
+}
+
+int process_request(char* request, char* outBuffer)
+{
+  header* head = parse_request(request);
+  char* auxBuffer = (char*) malloc(OUTBUFSIZE * sizeof(char));
+  int code;
+
+  if (head->mode == -1) { auxBuffer = ""; code = 200; }
+  else if (head->mode == 1) 
+    if ((encrypt_msg(head->message, (int) strlen(head->message), auxBuffer, head->cant)) == -1)
+      code = 300;
+    else
+      code = 100;
+  else if (head->mode == 0) 
+    if ((decrypt_msg(head->message, (int) strlen(head->message), auxBuffer, head->cant)) == -1)
+      code = 300;
+    else
+      code = 100;
+  else { auxBuffer = ""; code = 900; }
+
+  return create_response(code, auxBuffer, outBuffer);
+}
+
+void HandleTCPClient(int clntSocket, int id)
+{
+    char outBuffer[OUTBUFSIZE];     /* Buffer for echo string */
+    char inBuffer[OUTBUFSIZE];
     int recvMsgSize;                    /* Size of received message */
 
+    SERVERID = id;
     /* Receive message from client */
-    if ((recvMsgSize = recv(clntSocket, echoBuffer, RCVBUFSIZE, 0)) < 0)
+    if ((recvMsgSize = recv(clntSocket, inBuffer, OUTBUFSIZE, 0)) < 0)
         DieWithError("recv() failed");
 
-    echoBuffer[recvMsgSize] = '\0';
-    
-    //int out_size = encrypt_msg(echoBuffer, recvMsgSize, outBuffer);
+    inBuffer[recvMsgSize] = '\0';
 
-    //outBuffer[out_size] = '\0';
+    int size = process_request(inBuffer, outBuffer);
 
-    //int final_pos = decrypt_msg(outBuffer, out_size, decryptBuffer);
+    printf("%s\n", outBuffer);
 
-    //decryptBuffer[final_pos] = '\0';
-    printf("%s\n", echoBuffer);
-    
     /* Echo message back to client */
-    if (send(clntSocket, echoBuffer, recvMsgSize, 0) != recvMsgSize)
+    if (send(clntSocket,outBuffer, size, 0) != size)
         DieWithError("send() failed");
 
     close(clntSocket);    /* Close client socket */

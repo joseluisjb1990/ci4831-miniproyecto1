@@ -6,11 +6,13 @@
 #include <unistd.h>     /* for close() */
 #include <getopt.h>
 #include <time.h>
+#include <ctype.h>
 
 #define RCVBUFSIZE 128   /* Size of receive buffer */
 
 #define MES_SIZE 2048
 void DieWithError(char *errorMessage);  /* Error handling function */
+void write_file_process(char* buffer, char* file);
 
 void build_message(int encrypt, char* key, char* address, char* mes, char* ret_buffer)
 {
@@ -19,19 +21,37 @@ void build_message(int encrypt, char* key, char* address, char* mes, char* ret_b
     char output[128];
     strftime(output,128,"%d/%m/%Y %H:%M:%S",tlocal);
 
-    if (encrypt) strcpy(ret_buffer, "CIF\n");
+    if (encrypt == 1) strcpy(ret_buffer, "CIF\n");
     else strcpy(ret_buffer, "DES\n");
 
     strcat(ret_buffer, "key: ");
     strcat(ret_buffer, key); //ARREGLAR ESTO
     strcat(ret_buffer, "\n");
     strcat(ret_buffer, "address: ");
-    strcat(ret_buffer, address);
+    if(strcmp(address, "izquierda")) strcat(ret_buffer, "i"); else strcat(ret_buffer, "d");
     strcat(ret_buffer, "\n");
     strcat(ret_buffer, "time: ");
     strcat(ret_buffer, output);
     strcat(ret_buffer, "\n");
     strcat(ret_buffer, mes);
+}
+
+void parse_response(char* response, char* fileProcess)
+{
+  char temp[10];
+  char* auxToken = strtok(response, "\n"); 
+  int code = strtol(auxToken, NULL, 10);
+  auxToken = strtok(NULL, "\n"); //Parseamos la linea de la hora y el dia y la descartamos.
+  auxToken = strtok(NULL, "\n"); //En auxToken queda el mensaje encriptado
+  write_file_process(auxToken, fileProcess);
+}
+
+void write_file_process(char* buffer, char* file)
+{
+  FILE *fp = fopen(file, "w");
+  if(fp == NULL) DieWithError("OCURRIO UN ERROR ABRIENDO EL ARCHIVO");
+  fputs(buffer, fp);
+  fclose(fp);
 }
 
 void read_file_process(char* buffer, char* file)
@@ -46,6 +66,7 @@ void read_file_process(char* buffer, char* file)
   while((c = getc(fp)) != EOF)
     buffer[i++] = c;
 
+  buffer[i] = '\0';
   fclose(fp);
 }
 
@@ -55,8 +76,8 @@ int main(int argc, char *argv[])
     struct sockaddr_in echoServAddr; /* Echo server address */
     unsigned short echoServPort;     /* Echo server port */
     char *servIP;                    /* Server IP address (dotted quad) */
-    char echoString[RCVBUFSIZE];    /* String to send to echo server */
-    char echoBuffer[RCVBUFSIZE];     /* Buffer for echo string */
+    char echoString[MES_SIZE];    /* String to send to echo server */
+    char out_buffer[MES_SIZE]; 
     unsigned int echoStringLen;      /* Length of string to echo */
     int bytesRcvd, totalBytesRcvd;   /* Bytes read in single recv() 
                                         and total bytes read */
@@ -76,7 +97,6 @@ int main(int argc, char *argv[])
         "   Introduzca: scdax_cli -i <dir_ip> [-p <puerto_scdax_svr>] -c <long_clave> -a <dir_cif> -f <archivo_a_procesar> ");
 
 
-    printf("%d\n", echoServPort);
     int option = 0;
     while((option = getopt(argc, argv,"i:c:a:f:p:")) != -1) 
     {
@@ -103,11 +123,8 @@ int main(int argc, char *argv[])
                 break;
             case 'p':
                 if (!(echoServPort = atoi(optarg)))
-                {    
-                  printf("%d\n", echoServPort);
                   DieWithError("ERROR: EL VALOR SEGUIDO DE [-p] DEBE SER UN NUMERO DE PUERTO");
-                  break;
-                }
+                break;
             case '?':
                 DieWithError("ERROR: Argumentos invalidos.\n"
                 "   Introduzca: scdax_cli -i <dir_ip> [-p <puerto_scdax_svr>] -c <long_clave> -a <dir_cif> -f <archivo_a_procesar> ");
@@ -117,8 +134,6 @@ int main(int argc, char *argv[])
 
 
     read_file_process(echoString, nombreArchivoProcesar);
-
-    printf("%d\n", echoServPort);
 
     /* Create a reliable, stream socket using TCP */
     if ((sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
@@ -135,10 +150,12 @@ int main(int argc, char *argv[])
         DieWithError("connect() failed");
 
     // EN LA VARIABLE ECHOSTRING DEBERIA TENER EL MENSAJE A CIFRAR
-    char out_buffer[MES_SIZE]; 
-    // SI DEJO EL ECHOSTRING DA VIOLACION DE SEGMENTO ASI QUE MODIFICAR ESTO
-    //build_message(1, longClave, dirCifrado, echoString, out_buffer);
-    build_message(1, longClave, dirCifrado, "AQUI VA EL MENSAJE", out_buffer);
+
+    int mode;
+    if(isalpha(echoString[0]) || isdigit(echoString[0])) mode = 1;
+    else mode = 0;
+
+    build_message(mode, longClave, dirCifrado, echoString, out_buffer);
     echoStringLen = strlen(out_buffer);          /* Determine input length */
 
     printf("%s\n", out_buffer);
@@ -147,21 +164,12 @@ int main(int argc, char *argv[])
     if (send(sock, out_buffer, echoStringLen, 0) != echoStringLen)
         DieWithError("send() sent a different number of bytes than expected");
 
-    /* Receive the same string back from the server */
-    totalBytesRcvd = 0;
-    printf("Received: ");                /* Setup to print the echoed string */
-    while (totalBytesRcvd < echoStringLen)
-    {
-        /* Receive up to the buffer size (minus 1 to leave space for
-           a null terminator) bytes from the sender */
-        if ((bytesRcvd = recv(sock, echoBuffer, RCVBUFSIZE - 1, 0)) <= 0)
-            DieWithError("recv() failed or connection closed prematurely");
-        totalBytesRcvd += bytesRcvd;   /* Keep tally of total bytes */
-        echoBuffer[bytesRcvd] = '\0';  /* Terminate the string! */
-        printf("%s", echoBuffer);      /* Print the echo buffer */
-    }
+    if ((bytesRcvd = recv(sock, out_buffer, MES_SIZE - 1, 0)) <= 0)
+        DieWithError("recv() failed or connection closed prematurely");
 
-    printf("\n");    /* Print a final linefeed */
+    out_buffer[bytesRcvd] = '\0';  /* Terminate the string! */
+    
+    parse_response(out_buffer, nombreArchivoProcesar);  /* Print a final linefeed */
 
     close(sock);
     exit(0);
