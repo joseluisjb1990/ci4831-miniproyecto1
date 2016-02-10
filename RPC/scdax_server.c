@@ -22,9 +22,59 @@ typedef struct {
 } header;
 
 char* letters = "abcdefghijklmnopqrstuvwxyz";
-char SERVERID;
 
 void DieWithError(char *errorMessage);  /* Error handling function */
+
+void create_time(char *output)
+{
+	time_t tiempo = time(0);
+    struct tm *tlocal = localtime(&tiempo);
+    strftime(output,128,"%a %b %H:%M:%S %Y",tlocal);
+}
+
+char* description_response(int code)
+{
+	char *description = malloc(128 * sizeof(char));
+	switch(code) {
+	    case 100:
+	      strcpy(description, "El mensaje se pudo cifrar o descifrar correctamente.");
+	      break;
+	    case 200:
+	      strcpy(description, "El mensaje enviado por el cliente no sigue las reglas definidas por el protocolo");
+	      break;
+	    case 300:
+	      strcpy(description, "El mensaje no pudo ser cifrado correctamente");
+	      break;
+	    case 301:
+	      strcpy(description, "El mensaje no pudo ser descifrado correctamente.");
+	      break;
+	    case 302:
+	      strcpy(description, "Se intento descifrar un mensaje que no esta cifrado.");
+	      break;
+	    case 400:
+	      strcpy(description, "El mensaje no fue cifrado por este servidor.");
+	      break;
+	    case 500:
+	      strcpy(description, "El mensaje es muy grande para ser cifrado.");
+	      break;
+	    case 900:
+	      strcpy(description, "Ocurrió un error desconocido");
+	      break;
+	    default:
+	      strcpy(description, "Ocurrió un error desconocido");
+	  }
+	
+}
+
+
+void write_file_binnacle(char* buffer, char* file)
+{
+  FILE *fp = fopen(file, "a");
+  if(fp == NULL) DieWithError("OCURRIO UN ERROR ABRIENDO EL ARCHIVO");
+  fputs(buffer, fp);
+  fclose(fp);
+}
+
 
 char encryipt_char(char c, int shift)
 {
@@ -334,12 +384,54 @@ int *
 encrypt_msg_1_svc(message *argp, struct svc_req *rqstp)
 {
 	static int  result;
+	char outBuffer[OUTBUFSIZE];     /* Buffer for echo string */
+    char inBuffer[OUTBUFSIZE];
+    int recvMsgSize;
+    char *getTime = malloc(128 * sizeof(char));
+    char *bufferBinnacle = malloc(128 * sizeof(char));
+    char errorCode[3];
+    char *description;
 
 	/*
 	 * insert server code here
 	 */
-	 result = 1;
-	 printf("%s\n", argp->out_msg);
+	result = 1;
+	//printf("%s\n", argp->out_msg);
+	//printf("%d\n", SERVERID);
+
+
+	int size  = process_request(argp->out_msg, outBuffer);
+	printf("Buffer de Salida:\n");
+	printf("%s\n", outBuffer);
+	int i;
+	int tam = strlen(outBuffer);
+	for (i = 0; i < 3; ++i)
+	{
+		errorCode[i] = outBuffer[i];
+		printf("%c\n", errorCode[i]);
+	}
+	errorCode[i] = '\0';
+	
+	int codError = atoi(errorCode);
+	printf("Error code: %d\n", codError);
+	create_time(getTime);
+	printf("TIME: %s\n", getTime);
+	strcpy(bufferBinnacle, "[");
+	strcat(bufferBinnacle, getTime);
+	strcat(bufferBinnacle, "]");
+	strcat(bufferBinnacle, "[");
+	strcat(bufferBinnacle, errorCode);
+	strcat(bufferBinnacle, "]");
+	strcat(bufferBinnacle, "[cliente ");
+
+	strcat(bufferBinnacle, "]");
+	strcat(bufferBinnacle, "[");
+	strcat(bufferBinnacle, description_response(codError));
+	strcat(bufferBinnacle, "]");
+	strcat(bufferBinnacle, "\n");
+	printf("BITACORA:%s\n", bufferBinnacle);
+	write_file_binnacle(bufferBinnacle,archivoBitacoraSVC);
+
 
 	return &result;
 }

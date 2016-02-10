@@ -95,7 +95,14 @@ main (int argc, char **argv)
         }
     }
 
-	
+    /* Pasamos el archivo Bitacora */
+    archivoBitacoraSVC = malloc(MSGSIZE * sizeof(char));
+	archivoBitacoraSVC = archivoBitacora;
+
+	// Generamos el random para el servidor. USAR MEJORAMIENTO DE JOSE LUIS
+	SERVERID = 0;
+	SERVERID = 33 + rand() % 30;
+
 	transp = svctcp_create(RPC_ANYSOCK, 0, 0);
 	if (transp == NULL) {
 		fprintf (stderr, "%s", "cannot create tcp service.");
@@ -105,6 +112,7 @@ main (int argc, char **argv)
 		fprintf (stderr, "%s", "unable to register (SCDAX_PROG, SCDAX_VERS, tcp).");
 		exit(1);
 	}
+
 
 	svc_run ();
 	fprintf (stderr, "%s", "svc_run returned");

@@ -98,6 +98,7 @@ scdax_prog_1(char *host, char* longClave, char* dirCifrado, char* nombreArchivoP
 		exit (1);
 	}
 #endif	/* DEBUG */
+	printf("HOST: %s\n", host);
 
 	/*encrypt_msg_1_arg.msg = malloc(MSGSIZE * sizeof(char));
 	encrypt_msg_1_arg.msg_size = 4;

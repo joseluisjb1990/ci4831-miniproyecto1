@@ -14,7 +14,7 @@ extern "C" {
 #endif
 
 #define RCVBUFSIZE 32
-#define OUTBUFSIZE 160
+#define OUTBUFSIZE 2048
 #define LETTERSIZE 26
 #define BACONSIZE 6
 #define MSGSIZE 2048
@@ -24,6 +24,11 @@ struct message {
 	int msg_size;
 	char *out_msg;
 };
+
+char* archivoBitacoraSVC;
+int SERVERID;
+
+
 typedef struct message message;
 
 #define SCDAX_PROG 0x31111112
