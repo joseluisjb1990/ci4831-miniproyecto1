@@ -10,7 +10,7 @@
 
 #define RCVBUFSIZE 128   /* Size of receive buffer */
 
-#define MES_SIZE 2048
+#define MES_SIZE 2049
 void DieWithError(char *errorMessage);  /* Error handling function */
 void write_file_process(char* buffer, char* file);
 
@@ -25,7 +25,7 @@ void build_message(int encrypt, char* key, char* address, char* mes, char* ret_b
     else strcpy(ret_buffer, "DES\n");
 
     strcat(ret_buffer, "key: ");
-    strcat(ret_buffer, key); //ARREGLAR ESTO
+    strcat(ret_buffer, key);
     strcat(ret_buffer, "\n");
     strcat(ret_buffer, "address: ");
     if(strcmp(address, "izquierda") == 0) strcat(ret_buffer, "i"); else strcat(ret_buffer, "d");
@@ -33,6 +33,8 @@ void build_message(int encrypt, char* key, char* address, char* mes, char* ret_b
     strcat(ret_buffer, "time: ");
     strcat(ret_buffer, output);
     strcat(ret_buffer, "\n");
+    strcat(ret_buffer, "");
+    printf("%d\n", (int) strlen(ret_buffer));
     strcat(ret_buffer, mes);
 }
 
