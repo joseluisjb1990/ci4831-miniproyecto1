@@ -9,22 +9,42 @@
 #include <string.h>     /* for memset() */
 #include <stdlib.h>
 
+
+/**
+ * Este archivo define todo lo correspondiente al servidor
+ * @author: Jose Luis Jimenez y Ramon Marquez
+ */
+
+
+/**
+ * Método que imprime un mensaje de error y cierra el programa
+ * @param errorMessage Mensaje de error
+ */
 void DieWithError(char *errorMessage)
 {
     perror(errorMessage);
     exit(1);
 }
 
+
+// Estructura utilizada para el mensaje que cifra y/o descifra del servidor
 typedef struct {
   int mode;
   int cant;
   char* message;
 } header;
 
+
+// Caracteres utilizados para el cifrado/descrifrado
 char* letters = "abcdefghijklmnopqrstuvwxyz";
 
 void DieWithError(char *errorMessage);  /* Error handling function */
 
+
+/*
+ * Metodo que obtiene la hora actual
+ * @param output Variable que almacena la hora
+ */
 void create_time(char *output)
 {
 	time_t tiempo = time(0);
@@ -32,6 +52,12 @@ void create_time(char *output)
     strftime(output,128,"%a %b %H:%M:%S %Y",tlocal);
 }
 
+
+/*
+ * Metodo que dado el código de error, devuelve la descripcion del mismo
+ * @param code Código de error
+ * @return la descripción del código
+ */
 char* description_response(int code)
 {
 	char *description = malloc(128 * sizeof(char));
@@ -43,7 +69,7 @@ char* description_response(int code)
 	      strcpy(description, "El mensaje enviado por el cliente no sigue las reglas definidas por el protocolo");
 	      break;
 	    case 300:
-	      strcpy(description, "El mensaje no pudo ser cifrado correctamente");
+	      strcpy(description, "El mensaje no pudo ser cifrado correctamente.");
 	      break;
 	    case 301:
 	      strcpy(description, "El mensaje no pudo ser descifrado correctamente.");
@@ -67,6 +93,11 @@ char* description_response(int code)
 }
 
 
+/*
+ * Metodo que escribe en el archivo de bitácora del servidor
+ * @param buffer Mensaje a ser insertado en el archivo
+ * @param file Nombre del archivo
+ */
 void write_file_binnacle(char* buffer, char* file)
 {
   FILE *fp = fopen(file, "a");
@@ -76,6 +107,11 @@ void write_file_binnacle(char* buffer, char* file)
 }
 
 
+
+/*
+ *
+ * @param
+ */
 char encryipt_char(char c, int shift)
 {
   if(isspace(c)) return c;
@@ -92,6 +128,11 @@ char encryipt_char(char c, int shift)
 }
 
 
+
+/*
+ *
+ * @param
+ */
 char decrypt_char(char c, int shift)
 {
   if(isspace(c)) return c;
@@ -108,6 +149,11 @@ char decrypt_char(char c, int shift)
 }
 
 
+
+/*
+ *
+ * @param
+ */
 char decrypt_bacon_transform(char* s)
 {
   if (strcmp("AAAAAA", s) == 0) return 'a';
@@ -151,6 +197,12 @@ char decrypt_bacon_transform(char* s)
   if (strcmp("BAABBA", s) == 0) return '\n';
   return -1;
 }
+
+
+/*
+ *
+ * @param
+ */
 char* bacon_transform(char c)
 {
   switch(c) 
@@ -198,6 +250,11 @@ char* bacon_transform(char c)
   }
 }
 
+
+/*
+ *
+ * @param
+ */
 char random_char(char c)
 {
   int cs = 97 + rand() % LETTERSIZE;
@@ -208,6 +265,11 @@ char random_char(char c)
 }
 
 
+
+/*
+ *
+ * @param
+ */
 char decrypt_random_char(char c)
 {
   if(isupper(c)) return 'A';
@@ -216,11 +278,22 @@ char decrypt_random_char(char c)
   return -1;
 }
 
+
+/*
+ *
+ * @param
+ */
 void split(char* temp, char* original, int tam)
 {
   strncpy(temp, &(original[tam]), strlen(original) - tam);
 }
 
+
+
+/*
+ *
+ * @param
+ */
 header* parse_request(char* request)
 {
   header* head = (header*) malloc(sizeof(header));
@@ -268,6 +341,12 @@ header* parse_request(char* request)
   return head;
 }
 
+
+
+/*
+ *
+ * @param
+ */
 int create_response(int code, char* buffer, char* outBuffer)
 {
   time_t tiempo = time(0);
@@ -289,6 +368,11 @@ int create_response(int code, char* buffer, char* outBuffer)
 }
 
 
+
+/*
+ *
+ * @param
+ */
 int process_request(char* request, char* outBuffer)
 {
   header* head = parse_request(request);
@@ -315,6 +399,10 @@ int process_request(char* request, char* outBuffer)
 }
 
 
+/*
+ *
+ * @param
+ */
 int encrypt_msg(char* msg, int msg_size, char* outBuffer, int offset)
 {
 
@@ -347,6 +435,11 @@ int encrypt_msg(char* msg, int msg_size, char* outBuffer, int offset)
   return pos;
 }
 
+
+/*
+ *
+ * @param
+ */
 int decrypt_msg(char* msg, int msg_size, char* decryptBuffer, int offset)
 {
   if(SERVERID == msg[0]) { msg++; msg_size--; }
@@ -382,12 +475,15 @@ int decrypt_msg(char* msg, int msg_size, char* decryptBuffer, int offset)
 }
 
 
-/************************************************************************************/
+/*
+ *
+ * @param
+ */
 char **
 encrypt_msg_1_svc(message *argp, struct svc_req *rqstp)
 {
 	static char * result;
-	char outBuffer[OUTBUFSIZE];     /* Buffer for echo string */
+	char outBuffer[MES_SIZE];     /* Buffer for echo string */
     char inBuffer[OUTBUFSIZE];
     int recvMsgSize;
     char *getTime = malloc(128 * sizeof(char));
@@ -400,12 +496,10 @@ encrypt_msg_1_svc(message *argp, struct svc_req *rqstp)
 	 */
 
 	//printf("%s\n", argp->out_msg);
-	//printf("%d\n", SERVERID);
+	printf("%d\n", SERVERID);
 
 
 	int size  = process_request(argp->out_msg, outBuffer);
-	printf("Buffer de Salida:\n");
-	printf("%s\n", outBuffer);
 	int i;
 	int tam = strlen(outBuffer);
 	for (i = 0; i < 3; ++i)
@@ -426,11 +520,10 @@ encrypt_msg_1_svc(message *argp, struct svc_req *rqstp)
 	strcat(bufferBinnacle, errorCode);
 	strcat(bufferBinnacle, "]");
 	strcat(bufferBinnacle, "[cliente ");
-
+	strcat(bufferBinnacle, argp->ip_source);
 	strcat(bufferBinnacle, "]");
-	strcat(bufferBinnacle, "[");
+	strcat(bufferBinnacle, " ");
 	strcat(bufferBinnacle, description_response(codError));
-	strcat(bufferBinnacle, "]");
 	strcat(bufferBinnacle, "\n");
 	printf("BITACORA:%s\n", bufferBinnacle);
 	write_file_binnacle(bufferBinnacle,archivoBitacoraSVC);
@@ -440,14 +533,3 @@ encrypt_msg_1_svc(message *argp, struct svc_req *rqstp)
 	return &result;
 }
 
-int *
-decrypt_msg_1_svc(message *argp, struct svc_req *rqstp)
-{
-	static int  result;
-
-	/*
-	 * insert server code here
-	 */
-
-	return &result;
-}

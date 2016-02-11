@@ -12,7 +12,7 @@ xdr_message (XDR *xdrs, message *objp)
 
 	 if (!xdr_string (xdrs, &objp->msg, MSGSIZE))
 		 return FALSE;
-	 if (!xdr_int (xdrs, &objp->msg_size))
+	 if (!xdr_string (xdrs, &objp->ip_source, MSGSIZE))
 		 return FALSE;
 	 if (!xdr_string (xdrs, &objp->out_msg, MSGSIZE))
 		 return FALSE;

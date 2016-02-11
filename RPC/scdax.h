@@ -13,15 +13,16 @@
 extern "C" {
 #endif
 
-#define RCVBUFSIZE 32
-#define OUTBUFSIZE 2048
+#define RCVBUFSIZE 450
+#define OUTBUFSIZE 2300
 #define LETTERSIZE 26
 #define BACONSIZE 6
-#define MSGSIZE 2048
-
+#define MES_SIZE 450
+#define FILE_SIZE 401 
+	
 struct message {
 	char *msg;
-	int msg_size;
+	char *ip_source;
 	char *out_msg;
 };
 
@@ -38,18 +39,13 @@ typedef struct message message;
 #define ENCRYPT_MSG 1
 extern  char ** encrypt_msg_1(message *, CLIENT *);
 extern  char ** encrypt_msg_1_svc(message *, struct svc_req *);
-#define DECRYPT_MSG 2
-extern  int * decrypt_msg_1(message *, CLIENT *);
-extern  int * decrypt_msg_1_svc(message *, struct svc_req *);
 extern int scdax_prog_1_freeresult (SVCXPRT *, xdrproc_t, caddr_t);
 
 #else /* K&R C */
 #define ENCRYPT_MSG 1
 extern  char ** encrypt_msg_1();
 extern  char ** encrypt_msg_1_svc();
-#define DECRYPT_MSG 2
-extern  int * decrypt_msg_1();
-extern  int * decrypt_msg_1_svc();
+
 extern int scdax_prog_1_freeresult ();
 #endif /* K&R C */
 

@@ -1,0 +1,16 @@
+[Wed Feb 22:39:36 2016][300][cliente 127.0.0.1][El mensaje no pudo ser cifrado correctamente]
+[Wed Feb 22:39:51 2016][100][cliente 127.0.0.1][El mensaje se pudo cifrar o descifrar correctamente.]
+[Wed Feb 22:41:28 2016][100][cliente 127.0.0.1] El mensaje se pudo cifrar o descifrar correctamente.
+[Wed Feb 22:41:36 2016][300][cliente 127.0.0.1] El mensaje no pudo ser cifrado correctamente.
+[Wed Feb 22:42:29 2016][100][cliente 127.0.0.1] El mensaje se pudo cifrar o descifrar correctamente.
+[Wed Feb 22:42:40 2016][300][cliente 127.0.0.1] El mensaje no pudo ser cifrado correctamente.
+[Wed Feb 22:44:08 2016][100][cliente 127.0.0.1] El mensaje se pudo cifrar o descifrar correctamente.
+[Wed Feb 22:44:13 2016][100][cliente 127.0.0.1] El mensaje se pudo cifrar o descifrar correctamente.
+[Wed Feb 22:48:32 2016][100][cliente 127.0.0.1] El mensaje se pudo cifrar o descifrar correctamente.
+[Wed Feb 22:48:35 2016][100][cliente 127.0.0.1] El mensaje se pudo cifrar o descifrar correctamente.
+[Wed Feb 22:56:52 2016][100][cliente 127.0.0.1] El mensaje se pudo cifrar o descifrar correctamente.
+[Wed Feb 22:56:55 2016][100][cliente 127.0.0.1] El mensaje se pudo cifrar o descifrar correctamente.
+[Wed Feb 22:57:47 2016][100][cliente 127.0.0.1] El mensaje se pudo cifrar o descifrar correctamente.
+[Wed Feb 22:57:49 2016][100][cliente 127.0.0.1] El mensaje se pudo cifrar o descifrar correctamente.
+[Wed Feb 22:58:07 2016][100][cliente 127.0.0.1] El mensaje se pudo cifrar o descifrar correctamente.
+[Wed Feb 22:58:09 2016][100][cliente 127.0.0.1] El mensaje se pudo cifrar o descifrar correctamente.
