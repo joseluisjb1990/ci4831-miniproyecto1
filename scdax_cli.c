@@ -8,9 +8,9 @@
 #include <time.h>
 #include <ctype.h>
 
-#define RCVBUFSIZE 128   /* Size of receive buffer */
 
-#define MES_SIZE 2049
+#define MES_SIZE 450
+#define FILE_SIZE 401 
 void DieWithError(char *errorMessage);  /* Error handling function */
 void write_file_process(char* buffer, char* file);
 
@@ -40,7 +40,6 @@ void build_message(int encrypt, char* key, char* address, char* mes, char* ret_b
 
 void parse_response(char* response, char* fileProcess)
 {
-  char temp[10];
   char* auxToken = strtok(response, "\n"); 
   int code = strtol(auxToken, NULL, 10);
 
@@ -76,7 +75,7 @@ void parse_response(char* response, char* fileProcess)
 void write_file_process(char* buffer, char* file)
 {
   FILE *fp = fopen(file, "w");
-  if(fp == NULL) DieWithError("OCURRIO UN ERROR ABRIENDO EL ARCHIVO");
+  if(fp == NULL) DieWithError("ERROR FATAL: Ocurrio un error abriendo el archivo");
   fputs(buffer, fp);
   fclose(fp);
 }
@@ -87,13 +86,16 @@ void read_file_process(char* buffer, char* file)
   char c;
   int i;
 
-  if(fp == NULL) DieWithError("OCURRIO UN ERROR ABRIENDO EL ARCHIVO");
+  if(fp == NULL) DieWithError("ERROR FATAL: Ocurrio un error abriendo el archivo");
 
   i = 0;
   while((c = getc(fp)) != EOF)
     buffer[i++] = c;
+  
+  if(i == 0) DieWithError("ERROR 501: El mensaje que se intenta cifrar está vacío");
+  else if (i > 400) DieWithError("ERROR 500: El mensaje que se intenta cifrar es muy grande");
+  else buffer[i] = '\0';
 
-  buffer[i] = '\0';
   fclose(fp);
 }
 
@@ -103,10 +105,10 @@ int main(int argc, char *argv[])
     struct sockaddr_in echoServAddr; /* Echo server address */
     unsigned short echoServPort;     /* Echo server port */
     char *servIP;                    /* Server IP address (dotted quad) */
-    char echoString[MES_SIZE];    /* String to send to echo server */
+    char echoString[FILE_SIZE];    /* String to send to echo server */
     char out_buffer[MES_SIZE]; 
     unsigned int echoStringLen;      /* Length of string to echo */
-    int bytesRcvd, totalBytesRcvd;   /* Bytes read in single recv() 
+    int bytesRcvd;   /* Bytes read in single recv() 
                                         and total bytes read */
 
     /* Otras variables para el cifrado */
@@ -137,12 +139,12 @@ int main(int argc, char *argv[])
                 int key;
                 if (!(key=atoi(longClave)))
                     DieWithError("ERROR: EL VALOR SEGUIDO DE [-c] DEBE SER UN NUMERO ENTERO");
-                if ( (key < 1) || (key > 27) )
+                if ( (key < 1) || (key > 26) )
                     DieWithError("ERROR: EL VALOR SEGUIDO DE [-c] DEBE ESTAR COMPRENDIDO ENTRE 1 Y 27");
                 break;
             case 'a':
                 dirCifrado = optarg;     
-                if ( (strcmp("derecha",dirCifrado)!=0) || !(strcmp("izquierda",dirCifrado)!=0) )
+                if ( (strcmp(dirCifrado, "derecha")!=0) && (strcmp(dirCifrado, "izquierda")!=0) )
                     DieWithError("ERROR: EL VALOR SEGUIDO DE [-a] DEBE TOMAR LOS VALORES \"izquierda\" O \"derecha\"");
                 break;
             case 'f':
@@ -164,7 +166,7 @@ int main(int argc, char *argv[])
 
     /* Create a reliable, stream socket using TCP */
     if ((sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
-        DieWithError("socket() failed");
+        DieWithError("ERROR FATAL: Falló la creación del socket");
 
     /* Construct the server address structure */
     memset(&echoServAddr, 0, sizeof(echoServAddr));     /* Zero out structure */
@@ -172,11 +174,18 @@ int main(int argc, char *argv[])
     echoServAddr.sin_addr.s_addr = inet_addr(servIP);   /* Server IP address */
     echoServAddr.sin_port        = htons(echoServPort); /* Server port */
 
-    /* Establish the connection to the echo server */
-    if (connect(sock, (struct sockaddr *) &echoServAddr, sizeof(echoServAddr)) < 0)
-        DieWithError("connect() failed");
+    int intentos = 0;
 
-    // EN LA VARIABLE ECHOSTRING DEBERIA TENER EL MENSAJE A CIFRAR
+    while(intentos <= 3)
+      if(intentos == 3)
+        DieWithError("ERROR FATAL: No pudo ser realizada la conexion con el servidor");
+      else if (connect(sock, (struct sockaddr *) &echoServAddr, sizeof(echoServAddr)) < 0)
+      {
+        printf("%s\n%s\n", "Intento fallido de conexion con el servidor", "Intentando de nuevo en 5 segundos");
+        intentos++;
+        sleep(5);
+      } else
+        break;
 
     int mode;
     if(isalpha(echoString[0])) mode = 1;
@@ -185,14 +194,12 @@ int main(int argc, char *argv[])
     build_message(mode, longClave, dirCifrado, echoString, out_buffer);
     echoStringLen = strlen(out_buffer);          /* Determine input length */
 
-    printf("%s\n", out_buffer);
-
     /* Send the string to the server */
     if (send(sock, out_buffer, echoStringLen, 0) != echoStringLen)
-        DieWithError("send() sent a different number of bytes than expected");
+        DieWithError("ERROR FATAL: El requerimiento no pudo ser enviado al servidor correctamente");
 
     if ((bytesRcvd = recv(sock, out_buffer, MES_SIZE - 1, 0)) <= 0)
-        DieWithError("recv() failed or connection closed prematurely");
+        DieWithError("ERROR FATAL: La respuesta no pudo ser recibida correctamente por el cliente");
 
     out_buffer[bytesRcvd] = '\0';  /* Terminate the string! */
     
@@ -201,4 +208,3 @@ int main(int argc, char *argv[])
     close(sock);
     exit(0);
 }
-

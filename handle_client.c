@@ -7,8 +7,8 @@
 #include <ctype.h>
 #include <time.h>
 
-#define RCVBUFSIZE 32   /* Size of receive buffer */
-#define OUTBUFSIZE 2048
+#define RCVBUFSIZE 450   /* Size of receive buffer */
+#define OUTBUFSIZE 2300
 #define LETTERSIZE 26
 #define BACONSIZE 6
 
@@ -318,14 +318,14 @@ int process_request(char* request, char* outBuffer)
 
 void HandleTCPClient(int clntSocket, int id)
 {
-    char outBuffer[OUTBUFSIZE];     /* Buffer for echo string */
+    char outBuffer[OUTBUFSIZE];
     char inBuffer[OUTBUFSIZE];
-    int recvMsgSize;                    /* Size of received message */
+    int recvMsgSize;
 
     SERVERID = id;
     /* Receive message from client */
     if ((recvMsgSize = recv(clntSocket, inBuffer, OUTBUFSIZE, 0)) < 0)
-        DieWithError("recv() failed");
+        DieWithError("ERROR FATAL: Fallo la recepcion del requerimiento del cliente");
 
     inBuffer[recvMsgSize] = '\0';
 
@@ -335,7 +335,7 @@ void HandleTCPClient(int clntSocket, int id)
 
     /* Echo message back to client */
     if (send(clntSocket,outBuffer, size, 0) != size)
-        DieWithError("send() failed");
+        DieWithError("ERROR FATAL: Fallo el envio de la respuesta al cliente");
 
     close(clntSocket);    /* Close client socket */
 }
