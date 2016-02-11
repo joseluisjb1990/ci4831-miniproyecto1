@@ -58,9 +58,34 @@ void parse_response(char* response, char* fileProcess)
   char temp[10];
   char* auxToken = strtok(response, "\n"); 
   int code = strtol(auxToken, NULL, 10);
-  auxToken = strtok(NULL, "\n"); //Parseamos la linea de la hora y el dia y la descartamos.
-  auxToken = strtok(NULL, "\n"); //En auxToken queda el mensaje encriptado
-  write_file_process(auxToken, fileProcess);
+
+  switch(code) {
+    case 100:
+      auxToken = strtok(NULL, "\n"); //Parseamos la linea de la hora y el dia y la descartamos.
+      auxToken = strtok(NULL, "\0"); //En auxToken queda el mensaje encriptado
+      write_file_process(auxToken, fileProcess);
+      break;
+    case 200:
+      printf("ERROR %d: %s\n", code, "El mensaje enviado por el cliente no sigue las reglas definidas por el protocolo");
+      break;
+    case 300:
+      printf("ERROR %d: %s\n", code, "El mensaje no pudo ser cifrado correctamente");
+      break;
+    case 301:
+      printf("ERROR %d: %s\n", code, "El mensaje no pudo ser descifrado correctamente");
+      break;
+    case 302:
+      printf("ERROR %d: %s\n", code, "El mensaje no pudo ser descifrado correctamente");
+      break;
+    case 400:
+      printf("ERROR %d: %s\n", code, "El mensaje que se intentó descifrar no fue cifrado por el servidor al que se consultó");
+      break;
+    case 900:
+      printf("ERROR %d: %s\n", code, "Ocurrió un error grave en el servidor");
+      break;
+    default:
+      printf("%d\n", code);
+  }
 }
 
 
@@ -85,7 +110,7 @@ void
 scdax_prog_1(char *host, char* longClave, char* dirCifrado, char* nombreArchivoProcesar)
 {
 	CLIENT *clnt;
-	int  *result_1;
+	char * *result_1;
 	message  encrypt_msg_1_arg;
 	int  *result_2;
 	message  decrypt_msg_1_arg;
@@ -112,14 +137,12 @@ scdax_prog_1(char *host, char* longClave, char* dirCifrado, char* nombreArchivoP
 
 	/* Verificacion de si es msj cifrado o no */
 	int mode;
-    if(isalpha(echoString[0]) || isdigit(echoString[0])) mode = 1;
+    if(isalpha(echoString[0])) mode = 1;
     else mode = 0;
 
-	build_message(1, longClave, dirCifrado, encrypt_msg_1_arg.msg, encrypt_msg_1_arg.out_msg);
-	printf("Hola\n");
+	build_message(mode, longClave, dirCifrado, encrypt_msg_1_arg.msg, encrypt_msg_1_arg.out_msg);
 	result_1 = encrypt_msg_1(&encrypt_msg_1_arg, clnt);
-	printf("Hola1\n");
-	if (result_1 == (int *) NULL) {
+	if (result_1 == (char **) NULL) {
 		clnt_perror (clnt, "call failed");
 	}
 	/*result_2 = decrypt_msg_1(&decrypt_msg_1_arg, clnt);
@@ -162,9 +185,10 @@ main (int argc, char *argv[])
                     DieWithError("ERROR: EL VALOR SEGUIDO DE [-c] DEBE ESTAR COMPRENDIDO ENTRE 1 Y 27");
                 break;
             case 'a':
-                dirCifrado = optarg;     
-                if ( (strcmp("derecha",dirCifrado)!=0) || !(strcmp("izquierda",dirCifrado)!=0) )
-                    DieWithError("ERROR: EL VALOR SEGUIDO DE [-a] DEBE TOMAR LOS VALORES \"izquierda\" O \"derecha\"");
+                dirCifrado = optarg;  
+                printf("TAM: %d\n",strcmp("derecha",dirCifrado) );   
+                if ( !((strcmp("derecha",dirCifrado)==0) || (strcmp("izquierda",dirCifrado)==0)) )
+                	DieWithError("ERROR: EL VALOR SEGUIDO DE [-a] DEBE TOMAR LOS VALORES \"izquierda\" O \"derecha\"");
                 break;
             case 'f':
                 nombreArchivoProcesar = optarg;

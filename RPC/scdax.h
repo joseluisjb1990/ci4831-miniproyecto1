@@ -36,8 +36,8 @@ typedef struct message message;
 
 #if defined(__STDC__) || defined(__cplusplus)
 #define ENCRYPT_MSG 1
-extern  int * encrypt_msg_1(message *, CLIENT *);
-extern  int * encrypt_msg_1_svc(message *, struct svc_req *);
+extern  char ** encrypt_msg_1(message *, CLIENT *);
+extern  char ** encrypt_msg_1_svc(message *, struct svc_req *);
 #define DECRYPT_MSG 2
 extern  int * decrypt_msg_1(message *, CLIENT *);
 extern  int * decrypt_msg_1_svc(message *, struct svc_req *);
@@ -45,8 +45,8 @@ extern int scdax_prog_1_freeresult (SVCXPRT *, xdrproc_t, caddr_t);
 
 #else /* K&R C */
 #define ENCRYPT_MSG 1
-extern  int * encrypt_msg_1();
-extern  int * encrypt_msg_1_svc();
+extern  char ** encrypt_msg_1();
+extern  char ** encrypt_msg_1_svc();
 #define DECRYPT_MSG 2
 extern  int * decrypt_msg_1();
 extern  int * decrypt_msg_1_svc();

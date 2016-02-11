@@ -263,7 +263,7 @@ header* parse_request(char* request)
     return head;
   }
  
-  auxToken = strtok(NULL, "\n"); //Obtenemos el mensaje a descifrar.
+  auxToken = strtok(NULL, "\0"); //Obtenemos el mensaje a descifrar.
   head->message = auxToken;
   return head;
 }
@@ -302,18 +302,23 @@ int process_request(char* request, char* outBuffer)
     else
       code = 100;
   else if (head->mode == 0) 
-    if ((decrypt_msg(head->message, (int) strlen(head->message), auxBuffer, head->cant)) == -1)
-      code = 300;
-    else
-      code = 100;
+  {
+    int res = decrypt_msg(head->message, (int) strlen(head->message), auxBuffer, head->cant);
+    if(res == -1) code = 301;
+    else if (res == -2) code = 400;
+    else code = 100;
+  }
   else { auxBuffer = ""; code = 900; }
 
+  printf("%s\n", auxBuffer);
   return create_response(code, auxBuffer, outBuffer);
 }
 
 
 int encrypt_msg(char* msg, int msg_size, char* outBuffer, int offset)
 {
+
+  printf("%s\n", msg);
   int i;
   for(i = 0; i < msg_size; i++)
     msg[i] = tolower(msg[i]);
@@ -325,7 +330,6 @@ int encrypt_msg(char* msg, int msg_size, char* outBuffer, int offset)
 
   int pos = 0;
   outBuffer[pos++] = SERVERID;
-
   for(i = 0; i < msg_size; i++)
   {
     char* tchar; 
@@ -334,7 +338,6 @@ int encrypt_msg(char* msg, int msg_size, char* outBuffer, int offset)
     for(j = 0; j < BACONSIZE; j++)
       outBuffer[pos++] = tchar[j];  
   }
-
 
   for (i = 1; i < pos; i++)
     if((outBuffer[i] = random_char(outBuffer[i])) == -1)
@@ -346,7 +349,7 @@ int encrypt_msg(char* msg, int msg_size, char* outBuffer, int offset)
 
 int decrypt_msg(char* msg, int msg_size, char* decryptBuffer, int offset)
 {
-  if(SERVERID == msg[0]) msg++;
+  if(SERVERID == msg[0]) { msg++; msg_size--; }
   else return -2;
 
   if(msg_size % BACONSIZE != 0) return -1; //SI ESTO PASA HAY QUE RETORNAR UN CODIGO DE ERROR
@@ -358,7 +361,7 @@ int decrypt_msg(char* msg, int msg_size, char* decryptBuffer, int offset)
   int pos = 0;
   
 
-  for(i = 0; i < msg_size;)
+  for(	i = 0; i < msg_size;)
   {
     char temp[BACONSIZE + 1];
     int j;
@@ -367,12 +370,12 @@ int decrypt_msg(char* msg, int msg_size, char* decryptBuffer, int offset)
 
     temp[BACONSIZE] = '\0';
 
-    decryptBuffer[pos++] = decrypt_bacon_transform(temp);   
+    if((decryptBuffer[pos++] = decrypt_bacon_transform(temp)) == -1) return -1;   
   }
 
 
   for(i = 0; i < pos; i++)
-    decryptBuffer[i] = decrypt_char(decryptBuffer[i], offset);
+    if((decryptBuffer[i] = decrypt_char(decryptBuffer[i], offset)) == -1) return -1;
 
   decryptBuffer[pos] = '\0';
   return pos;
@@ -380,10 +383,10 @@ int decrypt_msg(char* msg, int msg_size, char* decryptBuffer, int offset)
 
 
 /************************************************************************************/
-int *
+char **
 encrypt_msg_1_svc(message *argp, struct svc_req *rqstp)
 {
-	static int  result;
+	static char * result;
 	char outBuffer[OUTBUFSIZE];     /* Buffer for echo string */
     char inBuffer[OUTBUFSIZE];
     int recvMsgSize;
@@ -395,7 +398,7 @@ encrypt_msg_1_svc(message *argp, struct svc_req *rqstp)
 	/*
 	 * insert server code here
 	 */
-	result = 1;
+
 	//printf("%s\n", argp->out_msg);
 	//printf("%d\n", SERVERID);
 
@@ -432,7 +435,8 @@ encrypt_msg_1_svc(message *argp, struct svc_req *rqstp)
 	printf("BITACORA:%s\n", bufferBinnacle);
 	write_file_binnacle(bufferBinnacle,archivoBitacoraSVC);
 
-
+	result = outBuffer;
+	printf("RESULTADO: %s\n", result);
 	return &result;
 }
 

@@ -142,8 +142,9 @@ int main(int argc, char *argv[])
                 break;
             case 'a':
                 dirCifrado = optarg;     
-                if ( (strcmp("derecha",dirCifrado)!=0) || !(strcmp("izquierda",dirCifrado)!=0) )
-                    DieWithError("ERROR: EL VALOR SEGUIDO DE [-a] DEBE TOMAR LOS VALORES \"izquierda\" O \"derecha\"");
+                printf("Dircifrado: %s\n", dirCifrado);
+                 if ( !((strcmp("derecha",dirCifrado)==0) || (strcmp("izquierda",dirCifrado)==0)) )
+                  DieWithError("ERROR: EL VALOR SEGUIDO DE [-a] DEBE TOMAR LOS VALORES \"izquierda\" O \"derecha\"");
                 break;
             case 'f':
                 nombreArchivoProcesar = optarg;
