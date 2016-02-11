@@ -82,9 +82,9 @@ void write_file_process(char* buffer, char* file)
  */
 void parse_response(char* response, char* fileProcess)
 {
-  char temp[10];
+  printf("Response:\n%s", response);
   char* auxToken = strtok(response, "\n"); 
-  int code = strtol(auxToken, NULL, 10);
+  int code = strtol(auxToken, NULL, 10); 
 
   switch(code) {
     case 100:
@@ -151,8 +151,6 @@ scdax_prog_1(char *host, char* longClave, char* dirCifrado, char* nombreArchivoP
 	CLIENT *clnt;
 	char * *result_1;
 	message  encrypt_msg_1_arg;
-	int  *result_2;
-	message  decrypt_msg_1_arg;
 	char echoString[MES_SIZE]; 
 
 #ifndef	DEBUG
@@ -172,14 +170,16 @@ scdax_prog_1(char *host, char* longClave, char* dirCifrado, char* nombreArchivoP
 
 	/* Verificacion de si es msj cifrado o no */
 	int mode;
-    if(isalpha(echoString[0])) mode = 1;
-    else mode = 0;
+  if(isalpha(echoString[0])) mode = 1;
+  else mode = 0;
 
 	build_message(mode, longClave, dirCifrado, encrypt_msg_1_arg.msg, encrypt_msg_1_arg.out_msg);
 	result_1 = encrypt_msg_1(&encrypt_msg_1_arg, clnt);
 	if (result_1 == (char **) NULL) {
 		clnt_perror (clnt, "call failed");
 	}
+  printf("LENGTH: %d\n", strlen(*result_1));
+  printf("RESULT: %s\n", *result_1);
 	parse_response(*result_1, nombreArchivoProcesar);
 
 #ifndef	DEBUG
@@ -199,8 +199,8 @@ main (int argc, char *argv[])
 {
 	char *host;
 	char *longClave;
-    char *dirCifrado;
-    char *nombreArchivoProcesar;
+  char *dirCifrado;
+  char *nombreArchivoProcesar;
 
 	if (argc < 9 || argc > 11)
         DieWithError("ERROR: Cantidad de argumentos invalidos.\n"
@@ -224,8 +224,7 @@ main (int argc, char *argv[])
                     DieWithError("ERROR: EL VALOR SEGUIDO DE [-c] DEBE ESTAR COMPRENDIDO ENTRE 1 Y 27");
                 break;
             case 'a':
-                dirCifrado = optarg;  
-                printf("TAM: %d\n",strcmp("derecha",dirCifrado) );   
+                dirCifrado = optarg;    
                 if ( !((strcmp("derecha",dirCifrado)==0) || (strcmp("izquierda",dirCifrado)==0)) )
                 	DieWithError("ERROR: EL VALOR SEGUIDO DE [-a] DEBE TOMAR LOS VALORES \"izquierda\" O \"derecha\"");
                 break;

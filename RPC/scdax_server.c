@@ -109,8 +109,10 @@ void write_file_binnacle(char* buffer, char* file)
 
 
 /*
- *
- * @param
+ * Método que cifra un caracter
+ * @param c Caracter a ser cifrado
+ * @param shift Clave utilizada para cifrar
+ * @return Caracter cifrado
  */
 char encryipt_char(char c, int shift)
 {
@@ -130,8 +132,10 @@ char encryipt_char(char c, int shift)
 
 
 /*
- *
- * @param
+ * Método que descifra un caracter
+ * @param c Caracter a ser descifrado
+ * @param shift Clave utilizada para descifrar
+ * @return Caracter descifrado
  */
 char decrypt_char(char c, int shift)
 {
@@ -151,8 +155,9 @@ char decrypt_char(char c, int shift)
 
 
 /*
- *
- * @param
+ * Procedimiento que descifra utilizando el código Bacon
+ * @param s String a ser descifrado
+ * @return Caracter según el string s
  */
 char decrypt_bacon_transform(char* s)
 {
@@ -200,8 +205,9 @@ char decrypt_bacon_transform(char* s)
 
 
 /*
- *
- * @param
+ * Procedimiento que cifra utilizando el código Bacon
+ * @param s Caracter a ser cifrado
+ * @return String según el caracter c
  */
 char* bacon_transform(char c)
 {
@@ -252,8 +258,9 @@ char* bacon_transform(char c)
 
 
 /*
- *
- * @param
+ * Método que genera un caracter aleatoriamente
+ * @param c Caracter a ser cambiado
+ * @return El caracter en mayúscula o minúscula 
  */
 char random_char(char c)
 {
@@ -267,8 +274,9 @@ char random_char(char c)
 
 
 /*
- *
- * @param
+ * Método que descifra un caracter
+ * @param c Caracter a ser descifrado
+ * @return A o B dependiendo de si el caracter es A o B
  */
 char decrypt_random_char(char c)
 {
@@ -280,8 +288,10 @@ char decrypt_random_char(char c)
 
 
 /*
- *
- * @param
+ * Procedimiento que divide un string dado el punto de division
+ * @param temp El buffer donde estará almacenado el resultado
+ * @param original Texto original
+ * @param tam Entero que indica el punto de quiebre del texto original
  */
 void split(char* temp, char* original, int tam)
 {
@@ -291,8 +301,9 @@ void split(char* temp, char* original, int tam)
 
 
 /*
- *
- * @param
+ * Función que parsea la solicitud proveniente del cliente
+ * @param request El mensaje construido por el cliente para el servidor
+ * @return el header utilizado para el cifrado/descifrado
  */
 header* parse_request(char* request)
 {
@@ -344,8 +355,11 @@ header* parse_request(char* request)
 
 
 /*
- *
- * @param
+ * Procedimiento que construye la respuesta del servidor
+ * @param code Código de respuesta
+ * @param buffer Mensaje cifrado/descifrado
+ * @param outBuffer Mensaje construido por el servidor enviado al cliente
+ * @return entero con el tamaño del mensaje construido
  */
 int create_response(int code, char* buffer, char* outBuffer)
 {
@@ -370,8 +384,10 @@ int create_response(int code, char* buffer, char* outBuffer)
 
 
 /*
- *
- * @param
+ * Método que procesa la solicitud del cliente
+ * @param request Mensaje a cifrar/descifrar
+ * @param outBuffer Mesaje cifrado/descifrado
+ * @return tam del mensaje
  */
 int process_request(char* request, char* outBuffer)
 {
@@ -400,13 +416,17 @@ int process_request(char* request, char* outBuffer)
 
 
 /*
- *
- * @param
+ * Procedimiento que cifra un mensaje
+ * @param msg Mensaje a ser cifrado
+ * @param msn_size Entero que indica el tamaño del mensaje
+ * @param outBuffer Mensaje cifrado
+ * @param offset Clave usado para cifrar
+ * @return el tamaño del mensaje final
  */
 int encrypt_msg(char* msg, int msg_size, char* outBuffer, int offset)
 {
 
-  printf("%s\n", msg);
+  printf("CIFRADO: %s\n", msg);
   int i;
   for(i = 0; i < msg_size; i++)
     msg[i] = tolower(msg[i]);
@@ -437,8 +457,12 @@ int encrypt_msg(char* msg, int msg_size, char* outBuffer, int offset)
 
 
 /*
- *
- * @param
+ * Procedimiento que descifra un mensaje
+ * @param msg Mensaje a ser descifrado
+ * @param msn_size Entero que indica el tamaño del mensaje
+ * @param outBuffer Mensaje descifrado
+ * @param offset Clave usado para descifrar
+ * @return el tamaño del mensaje final
  */
 int decrypt_msg(char* msg, int msg_size, char* decryptBuffer, int offset)
 {
@@ -476,8 +500,10 @@ int decrypt_msg(char* msg, int msg_size, char* decryptBuffer, int offset)
 
 
 /*
- *
- * @param
+ * Procedimiento que es invocado por el cliente
+ * @param arpg Mensaje a ser cifrado
+ * @param rqstp 
+ * @return Mensaje construido para el cliente
  */
 char **
 encrypt_msg_1_svc(message *argp, struct svc_req *rqstp)
@@ -496,7 +522,7 @@ encrypt_msg_1_svc(message *argp, struct svc_req *rqstp)
 	 */
 
 	//printf("%s\n", argp->out_msg);
-	printf("%d\n", SERVERID);
+//	printf("%d\n", SERVERID);
 
 
 	int size  = process_request(argp->out_msg, outBuffer);
@@ -505,12 +531,10 @@ encrypt_msg_1_svc(message *argp, struct svc_req *rqstp)
 	for (i = 0; i < 3; ++i)
 	{
 		errorCode[i] = outBuffer[i];
-		printf("%c\n", errorCode[i]);
 	}
 	errorCode[i] = '\0';
 	
 	int codError = atoi(errorCode);
-	printf("Error code: %d\n", codError);
 	create_time(getTime);
 	printf("TIME: %s\n", getTime);
 	strcpy(bufferBinnacle, "[");
@@ -529,7 +553,7 @@ encrypt_msg_1_svc(message *argp, struct svc_req *rqstp)
 	write_file_binnacle(bufferBinnacle,archivoBitacoraSVC);
 
 	result = outBuffer;
-	printf("RESULTADO: %s\n", result);
+	printf("RESULTADO: \n%s", result);
 	return &result;
 }
 

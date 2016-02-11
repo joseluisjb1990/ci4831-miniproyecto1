@@ -91,7 +91,7 @@ main (int argc, char **argv)
     }
 
     /* Pasamos el archivo Bitacora */
-    archivoBitacoraSVC = malloc(MSGSIZE * sizeof(char));
+    archivoBitacoraSVC = malloc(MES_SIZE * sizeof(char));
 	archivoBitacoraSVC = archivoBitacora;
 
 	// Generamos el random para el servidor. USAR MEJORAMIENTO DE JOSE LUIS

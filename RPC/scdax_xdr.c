@@ -10,11 +10,11 @@ xdr_message (XDR *xdrs, message *objp)
 {
 	register int32_t *buf;
 
-	 if (!xdr_string (xdrs, &objp->msg, MSGSIZE))
+	 if (!xdr_string (xdrs, &objp->msg, MES_SIZE))
 		 return FALSE;
-	 if (!xdr_string (xdrs, &objp->ip_source, MSGSIZE))
+	 if (!xdr_string (xdrs, &objp->ip_source, MES_SIZE))
 		 return FALSE;
-	 if (!xdr_string (xdrs, &objp->out_msg, MSGSIZE))
+	 if (!xdr_string (xdrs, &objp->out_msg, MES_SIZE))
 		 return FALSE;
 	return TRUE;
 }
