@@ -154,11 +154,23 @@ scdax_prog_1(char *host, char* longClave, char* dirCifrado, char* nombreArchivoP
 	char echoString[MES_SIZE]; 
 
 #ifndef	DEBUG
-	clnt = clnt_create (host, SCDAX_PROG, SCDAX_VERS, "tcp");
-	if (clnt == NULL) {
-		clnt_pcreateerror (host);
-		exit (1);
-	}
+  // Ciclo de intentos de conexión con el servidor
+  int intentos = 0;
+  while(intentos <= 3){
+
+      clnt = clnt_create (host, SCDAX_PROG, SCDAX_VERS, "tcp");
+      if(intentos == 3)
+        DieWithError("ERROR FATAL: No pudo ser realizada la conexion con el servidor");
+      else if (clnt == NULL)
+      {
+        printf("%s\n%s\n", "Intento fallido de conexion con el servidor", "Intentando de nuevo en 5 segundos");
+        intentos++;
+        sleep(5);
+      } else{
+        break;
+      }
+    }
+
 #endif	/* DEBUG */
 	printf("HOST: %s\n", host);
 

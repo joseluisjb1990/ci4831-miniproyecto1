@@ -14,6 +14,16 @@
 void DieWithError(char *errorMessage);  /* Error handling function */
 void write_file_process(char* buffer, char* file);
 
+
+/*
+ * Método que construye el mensaje de acuerdo al protocolo, que será enviado al
+ * servidor
+ * @param encrypt Indica si el mensaje va a ser cifrado o descifrado
+ * @param key Clave a utilizar para el cifrado
+ * @param address Desplazamiento de cifrado
+ * @param mes Mensaje a cifrar o descifrar
+ * @param ret_buffer Mensaje construido
+ */
 void build_message(int encrypt, char* key, char* address, char* mes, char* ret_buffer)
 {
     time_t tiempo = time(0);
@@ -38,6 +48,12 @@ void build_message(int encrypt, char* key, char* address, char* mes, char* ret_b
     strcat(ret_buffer, mes);
 }
 
+
+/*
+ * Metodo que interpreta la respuesta del servidor y lo escribe en el archivo
+ * @param response Respuesta del servidor
+ * @param fileProcess Nombre del archivo
+ */
 void parse_response(char* response, char* fileProcess)
 {
   char* auxToken = strtok(response, "\n"); 
@@ -72,6 +88,12 @@ void parse_response(char* response, char* fileProcess)
   }
 }
 
+
+/*
+ * Procedimiento que escribe un archivo
+ * @param buffer Mensaje a ser insertado en el archivo
+ * @param file Nombre del archivo
+ */
 void write_file_process(char* buffer, char* file)
 {
   FILE *fp = fopen(file, "w");
@@ -80,6 +102,12 @@ void write_file_process(char* buffer, char* file)
   fclose(fp);
 }
 
+
+/*
+ * Metodo que lee un archivo
+ * @param buffer Contiene la información leída del archivo
+ * @param file Nombre del archivo
+ */
 void read_file_process(char* buffer, char* file)
 {
   FILE *fp = fopen(file, "r");
@@ -99,6 +127,12 @@ void read_file_process(char* buffer, char* file)
   fclose(fp);
 }
 
+
+/*
+ * Metodo principal
+ * @param argc Tamaño del comando ejecutado
+ * @param argv Contiene el comando ejecutado
+ */
 int main(int argc, char *argv[])
 {
     int sock;                        /* Socket descriptor */

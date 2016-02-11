@@ -517,17 +517,14 @@ encrypt_msg_1_svc(message *argp, struct svc_req *rqstp)
     char errorCode[3];
     char *description;
 
-	/*
-	 * insert server code here
-	 */
 
-	//printf("%s\n", argp->out_msg);
-//	printf("%d\n", SERVERID);
 
 
 	int size  = process_request(argp->out_msg, outBuffer);
 	int i;
 	int tam = strlen(outBuffer);
+
+	// Obtenemos el codigo de respueste de outBuffer
 	for (i = 0; i < 3; ++i)
 	{
 		errorCode[i] = outBuffer[i];
@@ -537,6 +534,7 @@ encrypt_msg_1_svc(message *argp, struct svc_req *rqstp)
 	int codError = atoi(errorCode);
 	create_time(getTime);
 	printf("TIME: %s\n", getTime);
+	// Armamos la linea del archivo de bitácora
 	strcpy(bufferBinnacle, "[");
 	strcat(bufferBinnacle, getTime);
 	strcat(bufferBinnacle, "]");
@@ -549,7 +547,8 @@ encrypt_msg_1_svc(message *argp, struct svc_req *rqstp)
 	strcat(bufferBinnacle, " ");
 	strcat(bufferBinnacle, description_response(codError));
 	strcat(bufferBinnacle, "\n");
-	printf("BITACORA:%s\n", bufferBinnacle);
+
+	// Escribimos en el archivo bitacora
 	write_file_binnacle(bufferBinnacle,archivoBitacoraSVC);
 
 	result = outBuffer;
