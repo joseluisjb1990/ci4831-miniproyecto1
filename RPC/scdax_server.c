@@ -509,8 +509,8 @@ char **
 encrypt_msg_1_svc(message *argp, struct svc_req *rqstp)
 {
 	static char * result;
-	char outBuffer[MES_SIZE];     /* Buffer for echo string */
-    char inBuffer[OUTBUFSIZE];
+	char outBuffer[OUTBUFSIZE];     /* Buffer for echo string */
+    char inBuffer[MES_SIZE];
     int recvMsgSize;
     char *getTime = malloc(128 * sizeof(char));
     char *bufferBinnacle = malloc(128 * sizeof(char));

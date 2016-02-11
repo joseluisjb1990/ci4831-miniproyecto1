@@ -29,3 +29,11 @@
 [Thu Feb 09:20:35 2016][100][cliente 127.0.0.1] El mensaje se pudo cifrar o descifrar correctamente.
 [Thu Feb 09:21:58 2016][100][cliente 127.0.0.1] El mensaje se pudo cifrar o descifrar correctamente.
 [Thu Feb 09:22:54 2016][100][cliente 127.0.0.1] El mensaje se pudo cifrar o descifrar correctamente.
+[Thu Feb 09:44:55 2016][100][cliente 127.0.0.1] El mensaje se pudo cifrar o descifrar correctamente.
+[Thu Feb 09:45:11 2016][100][cliente 127.0.0.1] El mensaje se pudo cifrar o descifrar correctamente.
+[Thu Feb 09:45:21 2016][100][cliente 127.0.0.1] El mensaje se pudo cifrar o descifrar correctamente.
+[Thu Feb 09:45:31 2016][100][cliente 127.0.0.1] El mensaje se pudo cifrar o descifrar correctamente.
+[Thu Feb 09:45:47 2016][100][cliente 127.0.0.1] El mensaje se pudo cifrar o descifrar correctamente.
+[Thu Feb 09:45:54 2016][100][cliente 127.0.0.1] El mensaje se pudo cifrar o descifrar correctamente.
+[Thu Feb 09:46:01 2016][100][cliente 127.0.0.1] El mensaje se pudo cifrar o descifrar correctamente.
+[Thu Feb 09:46:04 2016][100][cliente 127.0.0.1] El mensaje se pudo cifrar o descifrar correctamente.
