@@ -43,6 +43,7 @@ void build_message(int encrypt, char* key, char* address, char* mes, char* ret_b
     char output[128];
     strftime(output,128,"%d/%m/%Y %H:%M:%S",tlocal);
 
+    /* Armamos el mensaje que será enviado al servidor */
     if (encrypt == 1) strcpy(ret_buffer, "CIF\n");
     else strcpy(ret_buffer, "DES\n");
 
@@ -117,6 +118,7 @@ void parse_response(char* response, char* fileProcess)
 
 
 /*
+/*
  * Metodo que lee un archivo
  * @param buffer Contiene la información leída del archivo
  * @param file Nombre del archivo
@@ -127,13 +129,16 @@ void read_file_process(char* buffer, char* file)
   char c;
   int i;
 
-  if(fp == NULL) DieWithError("OCURRIO UN ERROR ABRIENDO EL ARCHIVO");
+  if(fp == NULL) DieWithError("ERROR FATAL: Ocurrio un error abriendo el archivo");
 
   i = 0;
   while((c = getc(fp)) != EOF)
     buffer[i++] = c;
+  
+  if(i == 0) DieWithError("ERROR 501: El mensaje que se intenta cifrar está vacío");
+  else if (i > 400) DieWithError("ERROR 500: El mensaje que se intenta cifrar es muy grande");
+  else buffer[i] = '\0';
 
-  buffer[i] = '\0';
   fclose(fp);
 }
 

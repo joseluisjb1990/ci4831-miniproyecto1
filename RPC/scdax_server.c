@@ -426,7 +426,6 @@ int process_request(char* request, char* outBuffer)
 int encrypt_msg(char* msg, int msg_size, char* outBuffer, int offset)
 {
 
-  printf("CIFRADO: %s\n", msg);
   int i;
   for(i = 0; i < msg_size; i++)
     msg[i] = tolower(msg[i]);
