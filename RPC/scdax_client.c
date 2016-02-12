@@ -10,13 +10,32 @@
 #include <string.h>     /* for memset() */
 #include <stdlib.h>
 
+/**
+ * Este archivo define todo lo correspondiente al cliente
+ * @author: Jose Luis Jimenez y Ramon Marquez
+ */
 
+
+/**
+ * Método que imprime un mensaje de error y cierra el programa
+ * @param errorMessage Mensaje de error
+ */
 void DieWithError(char *errorMessage)
 {
     perror(errorMessage);
     exit(1);
 }
 
+
+/*
+ * Método que construye el mensaje de acuerdo al protocolo, que será enviado al
+ * servidor
+ * @param encrypt Indica si el mensaje va a ser cifrado o descifrado
+ * @param key Clave a utilizar para el cifrado
+ * @param address Desplazamiento de cifrado
+ * @param mes Mensaje a cifrar o descifrar
+ * @param ret_buffer Mensaje construido
+ */
 void build_message(int encrypt, char* key, char* address, char* mes, char* ret_buffer)
 {
     time_t tiempo = time(0);
@@ -24,27 +43,29 @@ void build_message(int encrypt, char* key, char* address, char* mes, char* ret_b
     char output[128];
     strftime(output,128,"%d/%m/%Y %H:%M:%S",tlocal);
 
-    /*if (encrypt == 1) {
-    	strcpy(ret_buffer, "CIF\n");
-    }else{
-    	strcpy(ret_buffer, "DES\n");
-    }*/
+    if (encrypt == 1) strcpy(ret_buffer, "CIF\n");
+    else strcpy(ret_buffer, "DES\n");
 
-    strcpy(ret_buffer, "CIF\n");
-    printf("%s\n", ret_buffer);
     strcat(ret_buffer, "key: ");
     strcat(ret_buffer, key);
     strcat(ret_buffer, "\n");
     strcat(ret_buffer, "address: ");
-    if(strcmp(address, "izquierda")) strcat(ret_buffer, "i"); else strcat(ret_buffer, "d");
+    if(strcmp(address, "izquierda") == 0) strcat(ret_buffer, "i"); else strcat(ret_buffer, "d");
     strcat(ret_buffer, "\n");
     strcat(ret_buffer, "time: ");
     strcat(ret_buffer, output);
     strcat(ret_buffer, "\n");
+    strcat(ret_buffer, "");
+    printf("%d\n", (int) strlen(ret_buffer));
     strcat(ret_buffer, mes);
 }
 
 
+/*
+ * Procedimiento que escribe un archivo
+ * @param buffer Mensaje a ser insertado en el archivo
+ * @param file Nombre del archivo
+ */
 void write_file_process(char* buffer, char* file)
 {
   FILE *fp = fopen(file, "w");
@@ -53,18 +74,53 @@ void write_file_process(char* buffer, char* file)
   fclose(fp);
 }
 
+
+/*
+ * Metodo que interpreta la respuesta del servidor y lo escribe en el archivo
+ * @param response Respuesta del servidor
+ * @param fileProcess Nombre del archivo
+ */
 void parse_response(char* response, char* fileProcess)
 {
-  char temp[10];
+  printf("Response:\n%s", response);
   char* auxToken = strtok(response, "\n"); 
-  int code = strtol(auxToken, NULL, 10);
-  auxToken = strtok(NULL, "\n"); //Parseamos la linea de la hora y el dia y la descartamos.
-  auxToken = strtok(NULL, "\n"); //En auxToken queda el mensaje encriptado
-  write_file_process(auxToken, fileProcess);
+  int code = strtol(auxToken, NULL, 10); 
+
+  switch(code) {
+    case 100:
+      auxToken = strtok(NULL, "\n"); //Parseamos la linea de la hora y el dia y la descartamos.
+      auxToken = strtok(NULL, "\0"); //En auxToken queda el mensaje encriptado
+      write_file_process(auxToken, fileProcess);
+      break;
+    case 200:
+      printf("ERROR %d: %s\n", code, "El mensaje enviado por el cliente no sigue las reglas definidas por el protocolo");
+      break;
+    case 300:
+      printf("ERROR %d: %s\n", code, "El mensaje no pudo ser cifrado correctamente");
+      break;
+    case 301:
+      printf("ERROR %d: %s\n", code, "El mensaje no pudo ser descifrado correctamente");
+      break;
+    case 302:
+      printf("ERROR %d: %s\n", code, "El mensaje no pudo ser descifrado correctamente");
+      break;
+    case 400:
+      printf("ERROR %d: %s\n", code, "El mensaje que se intentó descifrar no fue cifrado por el servidor al que se consultó");
+      break;
+    case 900:
+      printf("ERROR %d: %s\n", code, "Ocurrió un error grave en el servidor");
+      break;
+    default:
+      printf("%d\n", code);
+  }
 }
 
 
-
+/*
+ * Metodo que lee un archivo
+ * @param buffer Contiene la información leída del archivo
+ * @param file Nombre del archivo
+ */
 void read_file_process(char* buffer, char* file)
 {
   FILE *fp = fopen(file, "r");
@@ -81,64 +137,82 @@ void read_file_process(char* buffer, char* file)
   fclose(fp);
 }
 
+
+/*
+ * Método que implementa la llamada al servidor
+ * @param host Dirección IP del cliente
+ * @param longClave Clave utilizada para el cifrado
+ * @param dirCifrado Desplazamiento para el cifrado
+ * @param nombreArchivoProcesar Nombre del archivo a ser procesado
+ */
 void
 scdax_prog_1(char *host, char* longClave, char* dirCifrado, char* nombreArchivoProcesar)
 {
 	CLIENT *clnt;
-	int  *result_1;
+	char * *result_1;
 	message  encrypt_msg_1_arg;
-	int  *result_2;
-	message  decrypt_msg_1_arg;
-	char echoString[MSGSIZE]; 
+	char echoString[MES_SIZE]; 
 
 #ifndef	DEBUG
-	clnt = clnt_create (host, SCDAX_PROG, SCDAX_VERS, "tcp");
-	if (clnt == NULL) {
-		clnt_pcreateerror (host);
-		exit (1);
-	}
+  // Ciclo de intentos de conexión con el servidor
+  int intentos = 0;
+  while(intentos <= 3){
+
+      clnt = clnt_create (host, SCDAX_PROG, SCDAX_VERS, "tcp");
+      if(intentos == 3)
+        DieWithError("ERROR FATAL: No pudo ser realizada la conexion con el servidor");
+      else if (clnt == NULL)
+      {
+        printf("%s\n%s\n", "Intento fallido de conexion con el servidor", "Intentando de nuevo en 5 segundos");
+        intentos++;
+        sleep(5);
+      } else{
+        break;
+      }
+    }
+
 #endif	/* DEBUG */
 	printf("HOST: %s\n", host);
 
-	/*encrypt_msg_1_arg.msg = malloc(MSGSIZE * sizeof(char));
-	encrypt_msg_1_arg.msg_size = 4;
-	encrypt_msg_1_arg.out_msg = malloc(MSGSIZE * sizeof(char));*/
-
 	read_file_process(echoString, nombreArchivoProcesar);
-	encrypt_msg_1_arg.msg = malloc(MSGSIZE * sizeof(char));
+	encrypt_msg_1_arg.msg = malloc(MES_SIZE * sizeof(char));
 	encrypt_msg_1_arg.msg = echoString;
-	encrypt_msg_1_arg.msg_size = MSGSIZE; //ESTO CAMBIAAR
-	encrypt_msg_1_arg.out_msg = malloc(MSGSIZE * sizeof(char));	
+	encrypt_msg_1_arg.ip_source = host; 
+	encrypt_msg_1_arg.out_msg = malloc(OUTBUFSIZE * sizeof(char));	
 
 	/* Verificacion de si es msj cifrado o no */
 	int mode;
-    if(isalpha(echoString[0]) || isdigit(echoString[0])) mode = 1;
-    else mode = 0;
+  if(isalpha(echoString[0])) mode = 1;
+  else mode = 0;
 
-	build_message(1, longClave, dirCifrado, encrypt_msg_1_arg.msg, encrypt_msg_1_arg.out_msg);
-	printf("Hola\n");
+	build_message(mode, longClave, dirCifrado, encrypt_msg_1_arg.msg, encrypt_msg_1_arg.out_msg);
 	result_1 = encrypt_msg_1(&encrypt_msg_1_arg, clnt);
-	printf("Hola1\n");
-	if (result_1 == (int *) NULL) {
+	if (result_1 == (char **) NULL) {
 		clnt_perror (clnt, "call failed");
 	}
-	/*result_2 = decrypt_msg_1(&decrypt_msg_1_arg, clnt);
-	if (result_2 == (int *) NULL) {
-		clnt_perror (clnt, "call failed");
-	}*/
+  printf("LENGTH: %d\n", strlen(*result_1));
+  printf("RESULT: %s\n", *result_1);
+	parse_response(*result_1, nombreArchivoProcesar);
+
 #ifndef	DEBUG
 	clnt_destroy (clnt);
 #endif	 /* DEBUG */
 }
 
 
+
+/*
+ * Metodo principal
+ * @param argc Tamaño del comando ejecutado
+ * @param argv Contiene el comando ejecutado
+ */
 int
 main (int argc, char *argv[])
 {
 	char *host;
 	char *longClave;
-    char *dirCifrado;
-    char *nombreArchivoProcesar;
+  char *dirCifrado;
+  char *nombreArchivoProcesar;
 
 	if (argc < 9 || argc > 11)
         DieWithError("ERROR: Cantidad de argumentos invalidos.\n"
@@ -162,9 +236,9 @@ main (int argc, char *argv[])
                     DieWithError("ERROR: EL VALOR SEGUIDO DE [-c] DEBE ESTAR COMPRENDIDO ENTRE 1 Y 27");
                 break;
             case 'a':
-                dirCifrado = optarg;     
-                if ( (strcmp("derecha",dirCifrado)!=0) || !(strcmp("izquierda",dirCifrado)!=0) )
-                    DieWithError("ERROR: EL VALOR SEGUIDO DE [-a] DEBE TOMAR LOS VALORES \"izquierda\" O \"derecha\"");
+                dirCifrado = optarg;    
+                if ( !((strcmp("derecha",dirCifrado)==0) || (strcmp("izquierda",dirCifrado)==0)) )
+                	DieWithError("ERROR: EL VALOR SEGUIDO DE [-a] DEBE TOMAR LOS VALORES \"izquierda\" O \"derecha\"");
                 break;
             case 'f':
                 nombreArchivoProcesar = optarg;

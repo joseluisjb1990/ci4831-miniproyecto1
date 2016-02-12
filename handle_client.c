@@ -12,17 +12,28 @@
 #define LETTERSIZE 26
 #define BACONSIZE 6
 
+
+// Estructura utilizada para el mensaje que cifra y/o descifra del servidor
 typedef struct {
   int mode;
   int cant;
   char* message;
 } header;
 
+// Caracteres utilizados para el cifrado/descrifrado
 char* letters = "abcdefghijklmnopqrstuvwxyz";
+// Identificador del servidor
 char SERVERID;
 
 void DieWithError(char *errorMessage);  /* Error handling function */
 
+
+/*
+ * Método que cifra un caracter
+ * @param c Caracter a ser cifrado
+ * @param shift Clave utilizada para cifrar
+ * @return Caracter cifrado
+ */
 char encryipt_char(char c, int shift)
 {
   if(isspace(c)) return c;
@@ -38,6 +49,12 @@ char encryipt_char(char c, int shift)
 }
 
 
+/*
+ * Método que descifra un caracter
+ * @param c Caracter a ser descifrado
+ * @param shift Clave utilizada para descifrar
+ * @return Caracter descifrado
+ */
 char decrypt_char(char c, int shift)
 {
   if(isspace(c)) return c;
@@ -52,6 +69,12 @@ char decrypt_char(char c, int shift)
   return -1;
 }
 
+
+/*
+ * Procedimiento que descifra utilizando el código Bacon
+ * @param s String a ser descifrado
+ * @return Caracter según el string s
+ */
 char decrypt_bacon_transform(char* s)
 {
   if (strcmp("AAAAAA", s) == 0) return 'a';
@@ -95,6 +118,13 @@ char decrypt_bacon_transform(char* s)
   if (strcmp("BAABBA", s) == 0) return '\n';
   return -1;
 }
+
+
+/*
+ * Procedimiento que cifra utilizando el código Bacon
+ * @param s Caracter a ser cifrado
+ * @return String según el caracter c
+ */
 char* bacon_transform(char c)
 {
   switch(c) 
@@ -142,6 +172,12 @@ char* bacon_transform(char c)
   }
 }
 
+
+/*
+ * Método que genera un caracter aleatoriamente
+ * @param c Caracter a ser cambiado
+ * @return El caracter en mayúscula o minúscula 
+ */
 char random_char(char c)
 {
   int cs = 97 + rand() % LETTERSIZE;
@@ -151,6 +187,15 @@ char random_char(char c)
   else return -1;
 }
 
+
+/*
+ * Procedimiento que cifra un mensaje
+ * @param msg Mensaje a ser cifrado
+ * @param msn_size Entero que indica el tamaño del mensaje
+ * @param outBuffer Mensaje cifrado
+ * @param offset Clave usado para cifrar
+ * @return el tamaño del mensaje final
+ */
 int encrypt_msg(char* msg, int msg_size, char* outBuffer, int offset)
 {
 
@@ -180,6 +225,12 @@ int encrypt_msg(char* msg, int msg_size, char* outBuffer, int offset)
   return pos;
 }
 
+
+/*
+ * Método que descifra un caracter
+ * @param c Caracter a ser descifrado
+ * @return A o B dependiendo de si el caracter es A o B
+ */
 char decrypt_random_char(char c)
 {
   if(isupper(c)) return 'A';
@@ -188,6 +239,15 @@ char decrypt_random_char(char c)
   return -1;
 }
 
+
+/*
+ * Procedimiento que descifra un mensaje
+ * @param msg Mensaje a ser descifrado
+ * @param msn_size Entero que indica el tamaño del mensaje
+ * @param outBuffer Mensaje descifrado
+ * @param offset Clave usado para descifrar
+ * @return el tamaño del mensaje final
+ */
 int decrypt_msg(char* msg, int msg_size, char* decryptBuffer, int offset)
 {
   if(SERVERID == msg[0]) { msg++; msg_size--; }
@@ -218,11 +278,24 @@ int decrypt_msg(char* msg, int msg_size, char* decryptBuffer, int offset)
   return pos;
 }
 
+
+/*
+ * Procedimiento que divide un string dado el punto de division
+ * @param temp El buffer donde estará almacenado el resultado
+ * @param original Texto original
+ * @param tam Entero que indica el punto de quiebre del texto original
+ */
 void split(char* temp, char* original, int tam)
 {
   strncpy(temp, &(original[tam]), strlen(original) - tam);
 }
 
+
+/*
+ * Función que parsea la solicitud proveniente del cliente
+ * @param request El mensaje construido por el cliente para el servidor
+ * @return el header utilizado para el cifrado/descifrado
+ */
 header* parse_request(char* request)
 {
   header* head = (header*) malloc(sizeof(header));
@@ -270,6 +343,14 @@ header* parse_request(char* request)
   return head;
 }
 
+
+/*
+ * Procedimiento que construye la respuesta del servidor
+ * @param code Código de respuesta
+ * @param buffer Mensaje cifrado/descifrado
+ * @param outBuffer Mensaje construido por el servidor enviado al cliente
+ * @return entero con el tamaño del mensaje construido
+ */
 int create_response(int code, char* buffer, char* outBuffer)
 {
   time_t tiempo = time(0);
@@ -290,6 +371,13 @@ int create_response(int code, char* buffer, char* outBuffer)
   return strlen(outBuffer);
 }
 
+
+/*
+ * Método que procesa la solicitud del cliente
+ * @param request Mensaje a cifrar/descifrar
+ * @param outBuffer Mesaje cifrado/descifrado
+ * @return tam del mensaje
+ */
 int process_request(char* request, char* outBuffer)
 {
   header* head = parse_request(request);
@@ -314,6 +402,12 @@ int process_request(char* request, char* outBuffer)
   return create_response(code, auxBuffer, outBuffer);
 }
 
+
+/*
+ * Método que procesa la solicitud del cliente utilizando TCP
+ * @param clntSocket Socket utilizado por el cliente
+ * @param id Entero que identifica al servidor
+ */
 void HandleTCPClient(int clntSocket, int id)
 {
     char outBuffer[OUTBUFSIZE];

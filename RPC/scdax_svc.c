@@ -35,15 +35,10 @@ scdax_prog_1(struct svc_req *rqstp, register SVCXPRT *transp)
 
 	case ENCRYPT_MSG:
 		_xdr_argument = (xdrproc_t) xdr_message;
-		_xdr_result = (xdrproc_t) xdr_int;
+		_xdr_result = (xdrproc_t) xdr_wrapstring;
 		local = (char *(*)(char *, struct svc_req *)) encrypt_msg_1_svc;
 		break;
 
-	case DECRYPT_MSG:
-		_xdr_argument = (xdrproc_t) xdr_message;
-		_xdr_result = (xdrproc_t) xdr_int;
-		local = (char *(*)(char *, struct svc_req *)) decrypt_msg_1_svc;
-		break;
 
 	default:
 		svcerr_noproc (transp);
@@ -96,11 +91,11 @@ main (int argc, char **argv)
     }
 
     /* Pasamos el archivo Bitacora */
-    archivoBitacoraSVC = malloc(MSGSIZE * sizeof(char));
+    archivoBitacoraSVC = malloc(MES_SIZE * sizeof(char));
 	archivoBitacoraSVC = archivoBitacora;
 
 	// Generamos el random para el servidor. USAR MEJORAMIENTO DE JOSE LUIS
-	SERVERID = 0;
+	srand(time(NULL));
 	SERVERID = 33 + rand() % 30;
 
 	transp = svctcp_create(RPC_ANYSOCK, 0, 0);
