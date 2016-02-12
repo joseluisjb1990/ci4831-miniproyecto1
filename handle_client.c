@@ -1,7 +1,7 @@
-#include <stdio.h>      /* for printf() and fprintf() */
-#include <stdlib.h>      /* for printf() and fprintf() */
-#include <sys/socket.h> /* for recv() and send() */
-#include <unistd.h>     /* for close() */
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/socket.h>
+#include <unistd.h>
 #include <ctype.h>
 #include <string.h>
 #include <ctype.h>
@@ -401,7 +401,6 @@ int process_request(char* request, char* outBuffer)
 
   return create_response(code, auxBuffer, outBuffer);
 }
-
 
 /*
  * Método que procesa la solicitud del cliente utilizando TCP

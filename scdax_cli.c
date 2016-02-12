@@ -110,10 +110,15 @@ void write_file_process(char* buffer, char* file)
  */
 void read_file_process(char* buffer, char* file)
 {
+  char* s;
+
+  if((s = strrchr(file, '.')) == NULL) DieWithError("ERROR FATAL: El archivo no es del tipo texto");
+  else if(strcmp(s, ".txt") != 0) DieWithError("ERROR FATAL: El archivo no es del tipo texto"); 
+
   FILE *fp = fopen(file, "r");
   char c;
   int i;
-
+      
   if(fp == NULL) DieWithError("ERROR FATAL: Ocurrio un error abriendo el archivo");
 
   i = 0;
