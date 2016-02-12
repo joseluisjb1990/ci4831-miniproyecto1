@@ -8,7 +8,7 @@
 #include <time.h>
 
 #define RCVBUFSIZE 450   /* Size of receive buffer */
-#define OUTBUFSIZE 2300
+#define OUTBUFSIZE 2430
 #define LETTERSIZE 26
 #define BACONSIZE 6
 
@@ -154,7 +154,6 @@ char random_char(char c)
 int encrypt_msg(char* msg, int msg_size, char* outBuffer, int offset)
 {
 
-  printf("%s\n", msg);
   for(int i = 0; i < msg_size; i++)
     msg[i] = tolower(msg[i]);
 
@@ -312,14 +311,13 @@ int process_request(char* request, char* outBuffer)
   }
   else { auxBuffer = ""; code = 900; }
 
-  printf("%s\n", auxBuffer);
   return create_response(code, auxBuffer, outBuffer);
 }
 
 void HandleTCPClient(int clntSocket, int id)
 {
     char outBuffer[OUTBUFSIZE];
-    char inBuffer[OUTBUFSIZE];
+    char inBuffer[RCVBUFSIZE];
     int recvMsgSize;
 
     SERVERID = id;
@@ -330,8 +328,6 @@ void HandleTCPClient(int clntSocket, int id)
     inBuffer[recvMsgSize] = '\0';
 
     int size = process_request(inBuffer, outBuffer);
-
-    printf("%s\n", outBuffer);
 
     /* Echo message back to client */
     if (send(clntSocket,outBuffer, size, 0) != size)
