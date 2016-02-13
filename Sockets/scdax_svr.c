@@ -6,6 +6,13 @@
 #include <unistd.h>     /* for close() */
 #include <getopt.h>
 
+
+/**
+ * Este archivo define todo lo correspondiente al servidor
+ * @author: Jose Luis Jimenez y Ramon Marquez
+ */
+
+
 #define MAXPENDING 5    /* Maximum outstanding connection requests */
 
 void DieWithError(char *errorMessage);  /* Error handling function */

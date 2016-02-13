@@ -1,0 +1,55 @@
+/**********************************************************************
+								Integrantes
+***********************************************************************/
+José Luis Jiménez 10-10839
+Ramón Márquez	  10-10849
+
+/**********************************************************************
+								Carpetas
+***********************************************************************/
+
+- Carpeta "Sockets" contiene seis archivos:
+
+  * Makefile: genera los ejecutables.
+
+  * die_with_error.c: contiene el método que genera un mensaje de error.
+
+  * handle_client.c: archivo que contiene todo lo concerniente a la gestión
+    de solicitudes hechas por los clientes: cifrar/descifrar caracteres,
+    cifrar/descifrar mensajes, conversiones de los caracteres utilizando
+    Código de César y Bacon, etc.
+
+  * scdax_cli.c: archivo que contiene todo lo relacionado al cliente.
+    Construcción del mensaje que será enviado al servidor, lectura del
+    archivo que contiene el mensaje a ser cifrado/descifrado, escribir el
+    archivo de salida, parsear la respuesta del servidor, conectarse con 
+    el servidor.
+
+  * server_management.c: archivo que gestiona las conexiones y enlaces con
+    los clientes. Además, genera los archivos bitácoras del servidor.
+
+
+  * scdax_svr.c: archivo que gestiona todo lo correspondiente al servidor.
+    Recibe solicitudes de los clientes, genera un id que identifica a cada
+    servidor, llama a los procedimientos que se encuentra en handle_client.c
+    para atender dichas solicitudes.
+
+
+- Carpeta RPC contiene ocho archivos:
+
+  * Makefile: genera los ejecutables.
+
+  * scdax.x: sigue la especificación de lenguaje de RPC para que sirva como
+    entrada a la orden de comandos "rpcgen".
+
+  * scdax.h : Se genera con las modificaciones que indica el archivo scdax.x
+	con el comando "rpcgen".
+
+  * scdax_clnt.c: ontiene el código del talón vinculado con el cliente, que 
+    "rpcgen" generó y no debe ser alterado.
+
+  * scdax_client.c: Contiene el código generado por "rpcgen" para la aplicación 
+    del cliente y que fue alterado por nosotros. Acá se realizan las llamadas 
+    a las funciones que están en el servidor. Además, construye el mensaje que
+    será enviado al mismo, parsea su respuesta y escribe en el archivo de 
+    salida dicha respuesta.

@@ -9,6 +9,11 @@
 #include <ctype.h>
 
 
+/**
+ * Este archivo define todo lo correspondiente al cliente
+ * @author: Jose Luis Jimenez y Ramon Marquez
+ */
+ 
 #define MES_SIZE 450
 #define FILE_SIZE 401 
 void DieWithError(char *errorMessage);  /* Error handling function */
