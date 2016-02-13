@@ -23,4 +23,3 @@ encrypt_msg_1(message *argp, CLIENT *clnt)
 	}
 	return (&clnt_res);
 }
-

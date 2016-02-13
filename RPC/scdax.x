@@ -1,21 +1,21 @@
 /*		scdax.x			*/
 
-const RCVBUFSIZE = 32;   /* Size of receive buffer */
-const OUTBUFSIZE = 160;
+const RCVBUFSIZE = 2450;
+const OUTBUFSIZE = 2431;
 const LETTERSIZE = 26;
 const BACONSIZE  = 6;
-const MSGSIZE = 2048;
+const MES_SIZE  = 2450;
+const FILE_SIZE = 2401;
 
 struct message
 {
-	string msg<MSGSIZE>;
-	int msg_size;
-	string out_msg<MSGSIZE>;
+	string msg<MES_SIZE>;
+	string ip_source<MES_SIZE>;
+	string out_msg<MES_SIZE>;
 };
 
 program SCDAX_PROG {
 	version SCDAX_VERS {
-		int ENCRYPT_MSG(message)=1;
-		int DECRYPT_MSG(message)=2;
+		string ENCRYPT_MSG(message)=1;
 	}=1;
 }= 0x31111112;

@@ -16,6 +16,8 @@
  */
 
 
+
+
 /**
  * Método que imprime un mensaje de error y cierra el programa
  * @param errorMessage Mensaje de error
@@ -117,6 +119,7 @@ void write_file_binnacle(char* buffer, char* file)
 char encryipt_char(char c, int shift)
 {
   if(isspace(c)) return c;
+  if(c == '.') return c;
   int i;
   for(i = 0; i < LETTERSIZE; i++)
   {
@@ -140,6 +143,7 @@ char encryipt_char(char c, int shift)
 char decrypt_char(char c, int shift)
 {
   if(isspace(c)) return c;
+  if(c == '.') return c;
   int i;
   for(i = 0; i < LETTERSIZE; i++)
   {
@@ -397,10 +401,12 @@ int process_request(char* request, char* outBuffer)
 
   if (head->mode == -1) { auxBuffer = ""; code = 200; }
   else if (head->mode == 1) 
-    if ((encrypt_msg(head->message, (int) strlen(head->message), auxBuffer, head->cant)) == -1)
-      code = 300;
-    else
-      code = 100;
+  {
+    int res = encrypt_msg(head->message, (int) strlen(head->message), auxBuffer, head->cant);
+    if(res == -1) code = 300;
+    else if (res == -2) code = 500;
+    else code = 100;
+  }
   else if (head->mode == 0) 
   {
     int res = decrypt_msg(head->message, (int) strlen(head->message), auxBuffer, head->cant);
@@ -410,7 +416,6 @@ int process_request(char* request, char* outBuffer)
   }
   else { auxBuffer = ""; code = 900; }
 
-  printf("%s\n", auxBuffer);
   return create_response(code, auxBuffer, outBuffer);
 }
 

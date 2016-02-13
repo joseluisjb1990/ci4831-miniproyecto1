@@ -56,8 +56,6 @@ int main(int argc, char *argv[])
         }
     }
     
-    
-    printf(archivoBitacora);
     create_log(archivoBitacora);
 
     /* Create socket for incoming connections */

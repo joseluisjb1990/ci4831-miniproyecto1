@@ -10,6 +10,8 @@
 #include <string.h>     /* for memset() */
 #include <stdlib.h>
 
+#define MES_SIZE 2450
+#define FILE_SIZE 2401 
 /**
  * Este archivo define todo lo correspondiente al cliente
  * @author: Jose Luis Jimenez y Ramon Marquez
@@ -117,7 +119,7 @@ void parse_response(char* response, char* fileProcess)
 }
 
 
-/*
+
 /*
  * Metodo que lee un archivo
  * @param buffer Contiene la información leída del archivo

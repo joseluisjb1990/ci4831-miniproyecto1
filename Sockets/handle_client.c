@@ -7,6 +7,7 @@
 #include <ctype.h>
 #include <time.h>
 
+#define MAX_MES_SIZE 400
 #define RCVBUFSIZE 2450   /* Size of receive buffer */
 #define OUTBUFSIZE 2431
 #define LETTERSIZE 26
@@ -24,6 +25,8 @@ typedef struct {
 char* letters = "abcdefghijklmnopqrstuvwxyz";
 // Identificador del servidor
 char SERVERID;
+
+char* IPCLI;
 
 void DieWithError(char *errorMessage);  /* Error handling function */
 
@@ -200,7 +203,7 @@ char random_char(char c)
  */
 int encrypt_msg(char* msg, int msg_size, char* outBuffer, int offset)
 {
-  if(msg_size > 400) return -2;
+  if(msg_size > MAX_MES_SIZE) return -2;
 
   for(int i = 0; i < msg_size; i++)
     msg[i] = tolower(msg[i]);
@@ -369,7 +372,6 @@ int create_response(int code, char* buffer, char* outBuffer)
   strcat(outBuffer, "time: ");
   strcat(outBuffer, bufferTime);
   strcat(outBuffer, "\n");
-  printf("%d\n", (int) strlen(outBuffer));
   strcat(outBuffer, buffer);
   return strlen(outBuffer);
 }
@@ -419,6 +421,7 @@ void HandleTCPClient(int clntSocket, int id, char* ipcli)
     int recvMsgSize;
 
     SERVERID = id;
+    IPCLI = ipcli;
     /* Receive message from client */
     if ((recvMsgSize = recv(clntSocket, inBuffer, OUTBUFSIZE, 0)) < 0)
     {

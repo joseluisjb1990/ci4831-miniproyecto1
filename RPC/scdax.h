@@ -18,19 +18,16 @@ extern "C" {
 #define LETTERSIZE 26
 #define BACONSIZE 6
 #define MES_SIZE 2450
-#define FILE_SIZE 2401 
-	
+#define FILE_SIZE 2401
+
 struct message {
 	char *msg;
 	char *ip_source;
 	char *out_msg;
 };
-
-char* archivoBitacoraSVC;
-int SERVERID;
-
-
 typedef struct message message;
+int SERVERID;
+char* archivoBitacoraSVC;
 
 #define SCDAX_PROG 0x31111112
 #define SCDAX_VERS 1
@@ -45,7 +42,6 @@ extern int scdax_prog_1_freeresult (SVCXPRT *, xdrproc_t, caddr_t);
 #define ENCRYPT_MSG 1
 extern  char ** encrypt_msg_1();
 extern  char ** encrypt_msg_1_svc();
-
 extern int scdax_prog_1_freeresult ();
 #endif /* K&R C */
 
