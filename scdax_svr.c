@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 
     int option = 0;
     /* Caso en que la cantidad de argumentos es de 9 */
-    while((option = getopt(argc, argv,"l:b")) != -1) 
+    while((option = getopt(argc, argv,"l:b:")) != -1) 
     {
         switch (option)
         {
@@ -50,7 +50,8 @@ int main(int argc, char *argv[])
     }
     
     
-
+    printf(archivoBitacora);
+    create_log(archivoBitacora);
 
     /* Create socket for incoming connections */
     if ((servSock = tcp_socket()) < 0)
