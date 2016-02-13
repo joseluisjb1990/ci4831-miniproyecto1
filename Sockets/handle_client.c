@@ -7,8 +7,8 @@
 #include <ctype.h>
 #include <time.h>
 
-#define RCVBUFSIZE 450   /* Size of receive buffer */
-#define OUTBUFSIZE 2430
+#define RCVBUFSIZE 2450   /* Size of receive buffer */
+#define OUTBUFSIZE 2431
 #define LETTERSIZE 26
 #define BACONSIZE 6
 
@@ -369,6 +369,7 @@ int create_response(int code, char* buffer, char* outBuffer)
   strcat(outBuffer, "time: ");
   strcat(outBuffer, bufferTime);
   strcat(outBuffer, "\n");
+  printf("%d\n", (int) strlen(outBuffer));
   strcat(outBuffer, buffer);
   return strlen(outBuffer);
 }
