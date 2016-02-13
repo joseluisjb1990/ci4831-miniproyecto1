@@ -138,11 +138,15 @@ void read_file_process(char* buffer, char* file)
 
   i = 0;
   while((c = getc(fp)) != EOF)
+  {
+    if (i > MES_SIZE-1) DieWithError("ERROR 500: El mensaje que se intenta cifrar es muy grande");
     buffer[i++] = c;
+  }
   
   if(i == 0) DieWithError("ERROR 501: El mensaje que se intenta cifrar está vacío");
-  else if (i > 400) DieWithError("ERROR 500: El mensaje que se intenta cifrar es muy grande");
   else buffer[i] = '\0';
+
+  printf(buffer);
 
   fclose(fp);
 }

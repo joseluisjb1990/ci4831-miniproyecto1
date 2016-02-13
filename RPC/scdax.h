@@ -13,12 +13,12 @@
 extern "C" {
 #endif
 
-#define RCVBUFSIZE 450
-#define OUTBUFSIZE 2300
+#define RCVBUFSIZE 2450
+#define OUTBUFSIZE 2431
 #define LETTERSIZE 26
 #define BACONSIZE 6
-#define MES_SIZE 450
-#define FILE_SIZE 401 
+#define MES_SIZE 2450
+#define FILE_SIZE 2401 
 	
 struct message {
 	char *msg;

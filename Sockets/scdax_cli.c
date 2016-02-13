@@ -13,9 +13,9 @@
  * Este archivo define todo lo correspondiente al cliente
  * @author: Jose Luis Jimenez y Ramon Marquez
  */
- 
-#define MES_SIZE 450
-#define FILE_SIZE 401 
+#define MES_SIZE 2450
+#define FILE_SIZE 2401 
+
 void DieWithError(char *errorMessage);  /* Error handling function */
 void write_file_process(char* buffer, char* file);
 
@@ -85,6 +85,9 @@ void parse_response(char* response, char* fileProcess)
     case 400:
       printf("ERROR %d: %s\n", code, "El mensaje que se intentó descifrar no fue cifrado por el servidor al que se consultó");
       break;
+    case 500:
+      printf("ERROR %d: %s\n", code, "El mensaje que se intenta cifrar es muy grande");
+      break;
     case 900:
       printf("ERROR %d: %s\n", code, "Ocurrió un error grave en el servidor");
       break;
@@ -128,11 +131,15 @@ void read_file_process(char* buffer, char* file)
 
   i = 0;
   while((c = getc(fp)) != EOF)
+  {
+    if (i > MES_SIZE-1) DieWithError("ERROR 500: El mensaje que se intenta cifrar es muy grande");
     buffer[i++] = c;
+  }
   
   if(i == 0) DieWithError("ERROR 501: El mensaje que se intenta cifrar está vacío");
-  else if (i > 400) DieWithError("ERROR 500: El mensaje que se intenta cifrar es muy grande");
   else buffer[i] = '\0';
+
+  printf(buffer);
 
   fclose(fp);
 }
