@@ -37,6 +37,7 @@ void DieWithError(char *errorMessage);  /* Error handling function */
 char encryipt_char(char c, int shift)
 {
   if(isspace(c)) return c;
+  if(c == '.') return c;
   for(int i = 0; i < LETTERSIZE; i++)
   {
     if(letters[i] == c) 
@@ -58,6 +59,7 @@ char encryipt_char(char c, int shift)
 char decrypt_char(char c, int shift)
 {
   if(isspace(c)) return c;
+  if(c == '.') return c;
   for(int i = 0; i < LETTERSIZE; i++)
   {
     if(letters[i] == c) 
@@ -198,6 +200,7 @@ char random_char(char c)
  */
 int encrypt_msg(char* msg, int msg_size, char* outBuffer, int offset)
 {
+  if(msg_size > 400) return -2;
 
   for(int i = 0; i < msg_size; i++)
     msg[i] = tolower(msg[i]);
@@ -206,7 +209,6 @@ int encrypt_msg(char* msg, int msg_size, char* outBuffer, int offset)
     if ((msg[i] = encryipt_char(msg[i], offset)) == -1)
       return -1;
     
-
   int pos = 0;
   outBuffer[pos++] = SERVERID;
   for(int i = 0; i < msg_size; i++)
@@ -386,10 +388,12 @@ int process_request(char* request, char* outBuffer)
 
   if (head->mode == -1) { auxBuffer = ""; code = 200; }
   else if (head->mode == 1) 
-    if ((encrypt_msg(head->message, (int) strlen(head->message), auxBuffer, head->cant)) == -1)
-      code = 300;
-    else
-      code = 100;
+  {
+    int res = encrypt_msg(head->message, (int) strlen(head->message), auxBuffer, head->cant);
+    if(res == -1) code = 300;
+    else if (res == -2) code = 500;
+    else code = 100;
+  }
   else if (head->mode == 0) 
   {
     int res = decrypt_msg(head->message, (int) strlen(head->message), auxBuffer, head->cant);
@@ -407,7 +411,7 @@ int process_request(char* request, char* outBuffer)
  * @param clntSocket Socket utilizado por el cliente
  * @param id Entero que identifica al servidor
  */
-void HandleTCPClient(int clntSocket, int id)
+void HandleTCPClient(int clntSocket, int id, char* ipcli)
 {
     char outBuffer[OUTBUFSIZE];
     char inBuffer[RCVBUFSIZE];
@@ -416,7 +420,11 @@ void HandleTCPClient(int clntSocket, int id)
     SERVERID = id;
     /* Receive message from client */
     if ((recvMsgSize = recv(clntSocket, inBuffer, OUTBUFSIZE, 0)) < 0)
-        DieWithError("ERROR FATAL: Fallo la recepcion del requerimiento del cliente");
+    {
+      write_entry_log("recv", "ERROR FATAL: Fallo la recepcion del requerimiento del cliente", ipcli);
+      DieWithError("ERROR FATAL: Fallo la recepcion del requerimiento del cliente");
+    } else
+      write_entry_log("recv", "Se recibio una peticion del cliente", ipcli);
 
     inBuffer[recvMsgSize] = '\0';
 
@@ -424,7 +432,11 @@ void HandleTCPClient(int clntSocket, int id)
 
     /* Echo message back to client */
     if (send(clntSocket,outBuffer, size, 0) != size)
-        DieWithError("ERROR FATAL: Fallo el envio de la respuesta al cliente");
+    {
+      write_entry_log("send", "ERROR FATAL: Fallo el envio de la respuesta al cliente", ipcli);
+      DieWithError("ERROR FATAL: Fallo el envio de la respuesta al cliente");
+    } else
+      write_entry_log("send", "Se respondio al cliente", ipcli);
 
     close(clntSocket);    /* Close client socket */
 }

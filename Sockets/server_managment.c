@@ -80,7 +80,15 @@ int tcp_bind(unsigned short echoServPort, int servSock)
   /* Bind to the local address */
   int r = bind(servSock, (struct sockaddr *) &echoServAddr, sizeof(echoServAddr));
   
-  if(r < 0) printf("%s\n", "Ocurrio un error realizando la conexion al puerto");
-  else printf("%s\n", "Conexion al puerto realizada satisfactoriamente");
+  if(r < 0) 
+  {
+    write_entry_log("conexion", "ERROR FATAL: Ocurrio un error realizando la conexion al puerto", "");
+    DieWithError("ERROR FATAL: Ocurrio un error realizando la conexion al puerto");
+  }
+  else
+  {
+    write_entry_log("conexion", "Conexion al puerto realizada satisfactoriamente", "");
+    printf("%s\n", "Conexion al puerto realizada satisfactoriamente");
+  }
   return r;
 }
