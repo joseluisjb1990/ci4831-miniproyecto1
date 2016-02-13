@@ -35,7 +35,7 @@ Ramón Márquez	  10-10849
     para atender dichas solicitudes.
 
 
-- Carpeta RPC contiene ocho archivos:
+- Carpeta "RPC" contiene ocho archivos:
 
   * Makefile: genera los ejecutables.
 
@@ -53,3 +53,130 @@ Ramón Márquez	  10-10849
     a las funciones que están en el servidor. Además, construye el mensaje que
     será enviado al mismo, parsea su respuesta y escribe en el archivo de 
     salida dicha respuesta.
+
+  * scdax_svr.c: Producido por "rpcgen" y almacena el código del talón del 
+    servidor. A pesar de que es un archivo que no debe ser modificado, se le 
+	agregó las validaciones de los parámetros de entrada al momento de
+	ejecutar el servidor así como la generación del id que identifica a cada
+	servidor.
+
+  * scdax_server.c: Registra la plantilla con el código generado por "rpcgen" 
+    para la aplicación del servidor y fue alterado para agregar las funciones
+	necesarias. Contiene todo lo concerniente a la gestión de solicitudes hechas 
+	por los clientes: cifrar/descifrar caracteres, cifrar/descifrar mensajes, 
+	conversiones de los caracteres utilizando Código de César y Bacon, etc.
+
+  * scdax_xdr.c: archivo generado con el comando "rpcgen" que no debe ser
+    alterado.
+
+
+- Carpeta "Casos de prueba" contiene cuatro archivos:
+
+  caso_prueba1.txt, caso_prueba2.txt, caso_prueba3.txt y caso_prueba4.txt
+
+  Para usar estos archivos, se debe correr dentro de las carpetas Sockets o
+RPC.
+
+
+
+/**********************************************************************
+						¿Qué hace el programa?
+***********************************************************************/
+
+   El proyecto es un sistema de cifrado y descifrado SCDAX (Sistema de
+Cifrado y Descifrado de Archivos de Texto) de archivos de texto, que 
+utiliza el paradigma Cliente - Servidor para dicha tarea. Si un usuario
+requiere cifrar o descifrar un archivo de texto, ejecutará el comando del
+cliente para tal fin. Por lo tanto, el servidor tiene la tarea de cifrar
+y descifrar información que solo haya cifrado por él mismo, utilizando un
+mecanismo de esteganografía que le permita reconocer aquellos archivos que
+fueron cifrados por él.
+
+   El método de criptografía empleado toma como base el Cifrado de César,
+el cual, generalmente hablando, consiste en reemplazar cada letra del texto
+original por otra letra ubicado n posiciones más adelante en el alfabeto.
+Para el proyecto, se toma un alfabeto de 26 letras y el servidor, conociendo
+la cantidad de posiciones y la dirección (derecha o izquierda), realizará
+la sustitución de cada letra.
+
+  El método de esteganográfico empleado es el Código Bacon donde cada letra
+es reemplazada por una combinación de seis letras ‘A’ ó ‘B’.
+
+  El código cliente deberá escribir en el archivo las respuesta generada 
+por el servidor. Éste último, a su vez, genera un archivo bitácora el cual
+registra las actividades, cada vez que un cliente intenta o logra conectarse 
+a el, así como también cualquier problema o error que haya ocurrido durante la 
+conexión.
+
+
+/**********************************************************************
+						¿Cómo se ejecuta?
+***********************************************************************/
+
+- Compilación:
+    Ejecutar: make
+
+- Ejecución en Sockets:
+    * Servidor:
+        scdax_svr [-l <puerto_scdax_svr>] -b <archivo_bitacora>
+
+      Donde:
+
+		<puerto_scdax_svr>: Es el número de puerto local por donde el 
+		  servidor atenderá la interacción.
+
+		<archivo_bitácora>: Es el nombre y dirección relativa o absoluta 
+		  de un archivo de texto que realiza operaciones de bitácora. Cada 
+		  línea del archivo, es una entrada que incluye como elementos 
+		  mínimos la fecha, la hora y el evento a reportar.
+
+	* Cliente:
+	    scdax_cli -i <dir_ip> [-p <puerto_scdax_svr>] -c <long_clave> -a <dir_cif> -f <archivo_a_procesar>
+
+
+		Donde:
+
+		<dir_ip>: Es el nombre de dominio o la dirección IP (versión 4) del 
+		  equipo en donde se deberá ejecutar el servidor.
+
+		<puerto_scdax_svr>: Es el número de puerto remoto a través del cual 
+		  el servidor atenderá la comunicación solicitada.
+
+		<long_clave>: Corresponde al valor de la clave de cifrado y es un 
+		  valor entero entre 1 y 26.
+
+		<dir_cif>: Es la dirección del cifrado, puede tomar sólo 2 valores, 
+		  derecha o izquierda.
+
+		<archivo_a_procesar>: Es el archivo que contiene la información a ser 
+		  cifrada o descifrada.
+
+		Se puede notar que en ambas invocaciones, la definición del puerto está 
+		encerrado en corchetes [ ], esto indica que el usuario puede decidir no 
+		colocarlo. Si el usuario omite esta opción se utilizará un puerto por 
+		defecto. El puerto por defecto es 20849.
+		
+
+- Ejecución en RPC:
+
+	* Servidor: 
+		scdax_svr -b <archivo_bitacora>
+
+	* Cliente:
+		scdax_cli -i <dir_ip> -c <long_clave> -a <dir_cif> -f <archivo_a_procesar>
+
+    El significado de cada campo es igual al caso Sockets.
+
+
+/**********************************************************************
+						Condiciones particulares
+***********************************************************************/
+
+  Los mensajes enviados del cliente al servidor tendrán un tamaño máximo
+de 2449 bytes, de los cuales 49 bytes pertenecen a la cabecera y 2400 al 
+mensaje que se desea cifrar o descifrar. Es importante recalcar que el 
+mensaje a cifrar no puede ser mayor a 400 bytes, ya que al aplicarle el 
+método Bacon añade 6 bytes por byte. El tamaño de los mensajes enviados 
+del servidor al cliente tendrán un tamaño máximo de 2430 caracteres, de 
+los cuales 2000 es el tamaño máximo para el mensaje a cifrar y 30 
+pertenecen a la cabecera.
