@@ -44,7 +44,7 @@ void write_entry_log(char* activity, char* message, char* ipcli)
   write_log(activity);
   write_log("]");
 
-  write_log("[cliente");
+  write_log("[cliente ");
   write_log(ipcli);
   write_log("] ");
 
